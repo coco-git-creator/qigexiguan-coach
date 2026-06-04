@@ -1,0 +1,4 @@
+interface:
+  display_name: "七个习惯教练"
+  short_description: "七个习惯式自我教练，用认知镜子照见模式盲区，把困境转成影响圈内的一个清晰行动"
+  default_prompt: "Use $qigexiguan-coach to help me see my current pattern, identify my circle of influence, and design one small action I can take today."
