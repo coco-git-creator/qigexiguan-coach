@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>七个习惯教练</title>
+<title>习惯镜子</title>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 <style>
@@ -395,8 +395,8 @@
 <div class="modal-overlay hidden" id="welcomeModal">
   <div class="modal">
     <div class="modal-icon">🪞</div>
-    <h2>欢迎使用七个习惯教练</h2>
-    <p class="modal-sub">基于《高效能人士的七个习惯》的 AI 自我教练<br>免费试用 5 次，无需注册</p>
+    <h2>欢迎使用习惯镜子</h2>
+    <p class="modal-sub">照见行为模式，看清认知盲区<br>免费试用 5 次，无需注册</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">🪞</div>
@@ -450,15 +450,15 @@
     <h2>📋 我的反思卡片</h2>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input type="text" id="historySearch" placeholder="搜索关键词..." style="flex:1;padding:8px 10px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text);outline:none" oninput="renderRecords()">
-      <select id="historyFilter" onchange="renderRecords()" style="padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-xs);background:var(--bg);color:var(--text);max-width:100px">
-        <option value="">全部习惯</option>
-        <option value="habit1">习惯一</option>
-        <option value="habit2">习惯二</option>
-        <option value="habit3">习惯三</option>
-        <option value="habit4">习惯四</option>
-        <option value="habit5">习惯五</option>
-        <option value="habit6">习惯六</option>
-        <option value="habit7">习惯七</option>
+      <select id="historyFilter" onchange="renderRecords()" style="padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-xs);background:var(--bg);color:var(--text);max-width:120px">
+        <option value="">全部维度</option>
+        <option value="habit1">主动选择</option>
+        <option value="habit2">以终为始</option>
+        <option value="habit3">聚焦要事</option>
+        <option value="habit4">共赢思维</option>
+        <option value="habit5">深度倾听</option>
+        <option value="habit6">协作共创</option>
+        <option value="habit7">持续更新</option>
       </select>
     </div>
     <div id="recordsList" style="max-height:50dvh;overflow-y:auto;margin-bottom:12px">
@@ -490,7 +490,7 @@
   <div class="header-left">
     <div class="header-icon">🪞</div>
     <div>
-      <h1>七个习惯教练</h1>
+      <h1>习惯镜子</h1>
       <div class="header-sub" id="headerUsage">免费试用 5 次</div>
     </div>
   </div>
@@ -505,7 +505,7 @@
 <div class="chat" id="chat">
   <div class="empty" id="emptyState">
     <div class="empty-icon">🪞</div>
-    <h2>你好，我是七个习惯教练</h2>
+    <h2>你好，我是习惯镜子</h2>
     <p class="empty-sub">告诉我你现在的困境</p>
   </div>
   <div class="welcome-banner" id="welcomeBanner">
@@ -531,7 +531,7 @@
   <button class="btn-send" id="btnSend">→</button>
 </div>
 
-<div class="disclaimer">⚠️ 独立粉丝作品 · 与 FranklinCovey 无关 · 遇到严重心理困扰请寻求专业支持</div>
+<div class="disclaimer">⚠️ 独立个人作品 · 与 FranklinCovey 无关 · 遇到严重心理困扰请寻求专业支持</div>
 
 <script>
 // ── State ──
@@ -722,6 +722,10 @@ async function send() {
   btnSend.disabled = true;
 
   try {
+    // 20 秒超时，移动网络可能较慢
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
     const resp = await fetch(`${API_BASE}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -730,7 +734,9 @@ async function send() {
         message: text,
         history: messages.slice(-20),
       }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (resp.status === 402) {
       removeTyping();
@@ -761,7 +767,13 @@ async function send() {
 
   } catch (e) {
     removeTyping();
-    showError(e.message || '请求失败，请稍后重试');
+    if (e.name === 'AbortError') {
+      showError('请求超时，请检查网络后重试');
+    } else if (e.message === 'Failed to fetch') {
+      showError('网络连接失败，请检查网络设置。如使用移动数据，尝试切换 Wi-Fi');
+    } else {
+      showError(e.message || '请求失败，请稍后重试');
+    }
   } finally {
     isLoading = false;
     btnSend.disabled = false;
@@ -1028,7 +1040,7 @@ function exportWeekReport() {
   // 用浏览器打印功能导出 PDF
   const printWin = window.open('', '_blank', 'width=700,height=800');
   printWin.document.write(`
-    <html><head><meta charset="UTF-8"><title>七个习惯教练 · 周报</title>
+    <html><head><meta charset="UTF-8"><title>习惯镜子 · 周报</title>
     <style>
       body { font-family: "PingFang SC","Microsoft YaHei",sans-serif; color:#2b2314; padding:32px; max-width:600px; margin:auto; }
       h1 { font-size:22px; border-bottom:2px solid #b07d33; padding-bottom:8px; }
@@ -1038,7 +1050,7 @@ function exportWeekReport() {
       .text { font-size:14px; line-height:1.7; white-space:pre-wrap; margin-top:4px; }
       .summary { background:#f9f3e7; border-radius:8px; padding:14px; margin:20px 0; }
     </style></head><body>
-    <h1>🪞 七个习惯教练 · 周报</h1>
+    <h1>🪞 习惯镜子 · 周报</h1>
     <div class="meta">${weekAgo.toLocaleDateString()} — ${now.toLocaleDateString()} · 共 ${weekRecords.length} 次对话</div>
     <div class="summary"><strong>本周习惯分布：</strong>${habitList}</div>
     ${weekRecords.map(r => `
@@ -1047,7 +1059,7 @@ function exportWeekReport() {
         <div class="text">${(r.cards||[]).map(c => escapeHtml(c.text||'')).join('\n\n')}</div>
       </div>
     `).join('')}
-    <p style="text-align:center;color:#b8aa8e;font-size:12px;margin-top:30px">生成自 七个习惯教练 · 独立粉丝作品</p>
+    <p style="text-align:center;color:#b8aa8e;font-size:12px;margin-top:30px">生成自 习惯镜子</p>
     </body></html>
   `);
   printWin.document.close();
@@ -1061,56 +1073,117 @@ function enableReminder() {
     return;
   }
   if (Notification.permission === 'granted') {
-    scheduleReminder();
+    showReminderSettings();
   } else if (Notification.permission === 'denied') {
     alert('通知权限已被拒绝，请在浏览器设置中允许通知');
   } else {
     Notification.requestPermission().then(p => {
-      if (p === 'granted') scheduleReminder();
+      if (p === 'granted') showReminderSettings();
       else alert('需要允许通知才能设置提醒');
     });
   }
 }
 
-function scheduleReminder() {
-  const h = prompt('设置每日提醒时间（小时，0-23）：', '20');
-  if (!h) return;
-  const hour = parseInt(h);
-  if (isNaN(hour) || hour < 0 || hour > 23) { alert('请输入 0-23 的数字'); return; }
+function showReminderSettings() {
+  const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+  // 默认模板
+  const defaultMsg = '今天有什么想照一照镜子的？花 5 分钟聊聊吧。';
+  const lastMsg = reminders.length > 0 ? reminders[reminders.length-1].message : defaultMsg;
 
-  localStorage.setItem('coach_remind_hour', hour);
+  let html = `<div style="text-align:left">
+    <p style="font-size:var(--font-sm);color:var(--text-secondary);margin-bottom:12px">⏰ 设置每日反思提醒，帮你保持觉察</p>`;
 
-  // 计算到目标时间的毫秒数
-  const now = new Date();
-  const target = new Date();
-  target.setHours(hour, 0, 0, 0);
-  if (target <= now) target.setDate(target.getDate() + 1);
-  const delay = target.getTime() - now.getTime();
+  reminders.forEach((r, i) => {
+    html += `<div style="background:var(--accent-pale);border-radius:8px;padding:10px;margin-bottom:8px;font-size:var(--font-sm)">
+      <strong>${r.time}</strong> — ${r.message.slice(0,20)}${r.message.length>20?'…':''}
+      <button onclick="deleteReminder(${i})" style="float:right;background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px">&times;</button>
+    </div>`;
+  });
 
-  setTimeout(() => {
-    new Notification('🪞 七个习惯教练', {
-      body: '今天有什么想照一照镜子的？花 5 分钟聊聊吧。',
-      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🪞</text></svg>',
-    });
-    // 安排下一次提醒
-    setTimeout(() => scheduleReminder(), 1000);
-  }, delay);
+  if (reminders.length === 0) {
+    html += '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;padding:8px 0">暂无提醒</p>';
+  }
 
-  showError(`✅ 每日 ${hour}:00 提醒已设置`);
+  html += `
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input type="time" id="remindTime" value="20:00" style="padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text);width:110px">
+      <input type="text" id="remindMsg" placeholder="自定义提醒文字..." value="${escapeHtml(lastMsg)}" style="flex:1;padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text)">
+    </div>
+    <button id="btnAddReminder" style="width:100%;margin-top:8px;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:var(--font-sm);font-weight:600;cursor:pointer">+ 添加提醒</button>
+  </div>`;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `<div class="modal" style="max-width:400px">
+    <h2>⏰ 反思提醒</h2>
+    <div id="reminderContent">${html}</div>
+    <button class="btn-secondary" id="btnCloseReminder" style="margin-top:8px">完成</button>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.classList.remove('hidden');
+
+  const close = () => { modal.classList.add('hidden'); setTimeout(() => modal.remove(), 300); };
+  modal.querySelector('#btnCloseReminder').addEventListener('click', close);
+  modal.querySelector('#btnAddReminder').addEventListener('click', () => {
+    const time = modal.querySelector('#remindTime').value;
+    const msg = modal.querySelector('#remindMsg').value.trim();
+    if (!time) return;
+    const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+    reminders.push({ time, message: msg || defaultMsg });
+    localStorage.setItem('coach_reminders', JSON.stringify(reminders));
+    close();
+    scheduleAllReminders();
+    showError(`✅ 提醒已添加`);
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
+
+function deleteReminder(index) {
+  const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+  reminders.splice(index, 1);
+  localStorage.setItem('coach_reminders', JSON.stringify(reminders));
+  scheduleAllReminders();
+  // 刷新弹窗
+  document.querySelector('.modal-overlay')?.remove();
+  showReminderSettings();
+}
+
+let reminderTimers = [];
+function scheduleAllReminders() {
+  reminderTimers.forEach(clearTimeout);
+  reminderTimers = [];
+  const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+  reminders.forEach(r => {
+    const [hh, mm] = r.time.split(':').map(Number);
+    const now = new Date();
+    const target = new Date();
+    target.setHours(hh, mm, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
+    const delay = target.getTime() - now.getTime();
+    const timer = setTimeout(() => {
+      new Notification('🪞 习惯镜子', { body: r.message });
+      // 重新安排
+      scheduleAllReminders();
+    }, delay);
+    reminderTimers.push(timer);
+  });
+}
+
+// 页面加载时安排已有提醒
+if (Notification.permission === 'granted') scheduleAllReminders();
 async function openProgress() {
   document.getElementById('progressModal').classList.remove('hidden');
   renderProgress();
 }
 
 const HABIT_NAMES = {
-  habit1: '习惯一\n积极主动',
-  habit2: '习惯二\n以终为始',
-  habit3: '习惯三\n要事第一',
-  habit4: '习惯四\n双赢思维',
-  habit5: '习惯五\n知彼解己',
-  habit6: '习惯六\n统合综效',
-  habit7: '习惯七\n不断更新',
+  habit1: '主动选择',
+  habit2: '以终为始',
+  habit3: '聚焦要事',
+  habit4: '共赢思维',
+  habit5: '深度倾听',
+  habit6: '协作共创',
+  habit7: '持续更新',
 };
 
 const HABIT_SHORT = {
@@ -1234,7 +1307,7 @@ async function renderProgress() {
           <div style="font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);margin-top:2px">${blindName} · ${blindVal}次</div>
         </div>
       </div>` +
-      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:12px">🪞 雷达图帮你看见七个习惯的分布</p>';
+      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:12px">🪞 雷达图帮你看见各维度的分布</p>';
   } catch (e) {
     console.error('[renderProgress]', e);
     container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">加载失败，请重试</p>';
@@ -1243,5 +1316,8 @@ async function renderProgress() {
 
 init();
 </script>
+<footer style="text-align:center;padding:12px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-light);flex-shrink:0">
+  习惯镜子 · 独立个人作品 · 灵感来源于史蒂芬·柯维的著作，与其无关，不隶属于 FranklinCovey 或其关联机构
+</footer>
 </body>
 </html>
