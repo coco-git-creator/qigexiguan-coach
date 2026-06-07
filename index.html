@@ -445,22 +445,39 @@
 
 <!-- ====== Records Modal ====== -->
 <div class="modal-overlay hidden" id="recordsModal">
-  <div class="modal" style="max-width:440px">
+  <div class="modal" style="max-width:480px">
     <h2>📋 我的反思卡片</h2>
-    <div id="recordsList" style="max-height:60dvh;overflow-y:auto;margin-bottom:12px">
-      <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无记录<br>对话后点击「💾 保存反思卡片」即可保存</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input type="text" id="historySearch" placeholder="搜索关键词..." style="flex:1;padding:8px 10px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text);outline:none" oninput="renderRecords()">
+      <select id="historyFilter" onchange="renderRecords()" style="padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-xs);background:var(--bg);color:var(--text);max-width:100px">
+        <option value="">全部习惯</option>
+        <option value="habit1">习惯一</option>
+        <option value="habit2">习惯二</option>
+        <option value="habit3">习惯三</option>
+        <option value="habit4">习惯四</option>
+        <option value="habit5">习惯五</option>
+        <option value="habit6">习惯六</option>
+        <option value="habit7">习惯七</option>
+      </select>
+    </div>
+    <div id="recordsList" style="max-height:50dvh;overflow-y:auto;margin-bottom:12px">
+      <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">
+        暂无记录<br>对话后点击「💾 保存反思卡片」即可保存<br>
+        <button onclick="loadCloudHistory()" style="background:none;border:1px solid var(--accent-light);color:var(--accent);padding:6px 14px;border-radius:14px;font-size:var(--font-xs);cursor:pointer;margin-top:8px">☁️ 加载云端历史</button>
+      </p>
     </div>
     <button class="btn-primary" id="btnCloseRecords">关闭</button>
     <button class="btn-secondary" id="btnExportAll" style="color:var(--accent)">📥 导出全部卡片</button>
+    <button class="btn-secondary" id="btnExportPDF" style="color:var(--accent)">🖨️ 导出本周周报</button>
     <button class="btn-secondary" id="btnClearRecords" style="color:#c0392b">清空全部记录</button>
   </div>
 </div>
 
 <!-- ====== Progress Modal ====== -->
 <div class="modal-overlay hidden" id="progressModal">
-  <div class="modal" style="max-width:440px">
-    <h2>📊 我的成长</h2>
-    <div id="progressContent" style="max-height:60dvh;overflow-y:auto;margin-bottom:12px">
+  <div class="modal" style="max-width:480px">
+    <h2>📊 我的成长镜像</h2>
+    <div id="progressContent" style="max-height:65dvh;overflow-y:auto;margin-bottom:12px">
       <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无数据<br>开始对话后会自动记录</p>
     </div>
     <button class="btn-primary" id="btnCloseProgress">关闭</button>
@@ -477,6 +494,7 @@
     </div>
   </div>
   <div style="display:flex;gap:8px">
+    <button class="btn-icon" id="btnRemind" title="每日提醒">⏰</button>
     <button class="btn-icon" id="btnProgress" title="我的进展">📊</button>
     <button class="btn-icon" id="btnRecords" title="我的记录">📋</button>
     <button class="btn-icon" id="btnReset" title="新对话">🔄</button>
@@ -622,6 +640,10 @@ function init() {
     }
   });
   document.getElementById('btnExportAll').addEventListener('click', exportAllCards);
+  document.getElementById('btnExportPDF').addEventListener('click', exportWeekReport);
+
+  // 提醒
+  document.getElementById('btnRemind').addEventListener('click', enableReminder);
 
   // 进度面板
   document.getElementById('btnProgress').addEventListener('click', openProgress);
@@ -827,30 +849,77 @@ function hideEmpty() { const es = chat.querySelector('.empty'); if (es) es.style
 function hideSuggestions() { const el = document.getElementById('onboardingArea'); if (el) el.style.display = 'none'; }
 
 // ── 记录查看 ──
+let cloudHistoryCache = null;
+
 function openRecords() {
   document.getElementById('recordsModal').classList.remove('hidden');
+  document.getElementById('historySearch').value = '';
+  document.getElementById('historyFilter').value = '';
+  cloudHistoryCache = null;
   renderRecords();
+}
+
+// 合并云端+本地记录
+function getMergedRecords() {
+  const local = JSON.parse(localStorage.getItem('coach_records') || '[]');
+  const cloud = (cloudHistoryCache || []).map(h => ({
+    date: h.date,
+    source: 'cloud',
+    cards: [{ type: 'mirror', icon: '🪞', label: '对话', text: `你：${h.user}\n\n教练：${h.reply}` }],
+    habit: h.habit,
+  }));
+  // 合并并按时间倒序
+  return [...local.map(r => ({...r, source: 'local'})), ...cloud].sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 function renderRecords() {
   const list = document.getElementById('recordsList');
-  const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+  const searchQ = (document.getElementById('historySearch')?.value || '').toLowerCase();
+  const habitFilter = document.getElementById('historyFilter')?.value || '';
+
+  let records = getMergedRecords();
+
+  // 搜索过滤
+  if (searchQ) {
+    records = records.filter(r => {
+      const text = (r.cards || []).map(c => (c.text||'')).join(' ').toLowerCase();
+      return text.includes(searchQ);
+    });
+  }
+  // 习惯过滤
+  if (habitFilter) {
+    records = records.filter(r => r.habit === habitFilter);
+  }
+
   if (!records.length) {
-    list.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无记录<br>对话后点击「💾 保存反思卡片」即可保存</p>';
+    list.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无匹配记录<br><button onclick="loadCloudHistory()" style="background:none;border:1px solid var(--accent-light);color:var(--accent);padding:6px 14px;border-radius:14px;font-size:var(--font-xs);cursor:pointer;margin-top:8px">☁️ 加载云端历史</button></p>';
     return;
   }
+
   list.innerHTML = records.map((r, i) => {
     const d = new Date(r.date);
     const ds = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
     const cards = r.cards || [];
+    const sourceTag = r.source === 'cloud' ? ' ☁️' : '';
     const preview = cards.map(c => {
       const full = (c.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const t = full.replace(/\n/g, ' ').slice(0, 200);
-      return `<div style="font-size:var(--font-sm);margin-top:4px;line-height:1.5"><span style="font-weight:700">${c.icon} ${c.label}</span> <span style="color:var(--text-secondary)">${t}${full.length>200?'…':''}</span></div>`;
+      const t = full.replace(/\n/g, ' ').slice(0, 150);
+      return `<div style="font-size:var(--font-sm);margin-top:4px;line-height:1.5"><span style="font-weight:700">${c.icon} ${c.label}</span> <span style="color:var(--text-secondary)">${t}${full.length>150?'…':''}</span></div>`;
     }).join('');
     const fullCards = cards.map(c => `<div style="margin-bottom:8px;line-height:1.6"><div style="font-weight:700;font-size:var(--font-base);margin-bottom:2px">${c.icon} ${c.label}</div><div style="font-size:var(--font-base);color:var(--text);white-space:pre-wrap">${(c.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>`).join('');
-    return `<div class="record-item" style="padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="this.querySelector('.record-full').classList.toggle('show')"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:var(--font-sm);font-weight:600">📅 ${ds}</span><button onclick="event.stopPropagation();deleteRecord(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px">&times;</button></div>${preview}<div class="record-full" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)">${fullCards}</div></div>`;
+    return `<div class="record-item" style="padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="this.querySelector('.record-full').classList.toggle('show')"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:var(--font-sm);font-weight:600">📅 ${ds}${sourceTag}</span><button onclick="event.stopPropagation();deleteRecord(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px">&times;</button></div>${preview}<div class="record-full" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)">${fullCards}</div></div>`;
   }).join('');
+}
+
+async function loadCloudHistory() {
+  try {
+    const resp = await fetch(`${API_BASE}/history?deviceId=${getDeviceId()}`);
+    if (!resp.ok) throw new Error('加载失败');
+    cloudHistoryCache = await resp.json();
+    renderRecords();
+  } catch (e) {
+    console.error('[loadCloudHistory]', e);
+  }
 }
 
 function deleteRecord(idx) {
@@ -932,21 +1001,186 @@ async function exportAllCards() {
   }
 }
 
-// ── 进度面板 ──
+// ── PDF 周报导出 ──
+function exportWeekReport() {
+  const records = getMergedRecords();
+  if (!records.length) { alert('暂无记录可导出'); return; }
+
+  // 筛选本周记录
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekRecords = records.filter(r => new Date(r.date) >= weekAgo);
+
+  const habitCounts = {};
+  weekRecords.forEach(r => {
+    if (r.habit) habitCounts[r.habit] = (habitCounts[r.habit] || 0) + 1;
+  });
+
+  const habitList = Object.entries(habitCounts)
+    .sort(([,a], [,b]) => b - a)
+    .map(([k, v]) => `${HABIT_NAMES[k]?.replace('\n','') || k}: ${v}次`)
+    .join(' | ') || '暂无';
+
+  // 用浏览器打印功能导出 PDF
+  const printWin = window.open('', '_blank', 'width=700,height=800');
+  printWin.document.write(`
+    <html><head><meta charset="UTF-8"><title>七个习惯教练 · 周报</title>
+    <style>
+      body { font-family: "PingFang SC","Microsoft YaHei",sans-serif; color:#2b2314; padding:32px; max-width:600px; margin:auto; }
+      h1 { font-size:22px; border-bottom:2px solid #b07d33; padding-bottom:8px; }
+      .meta { color:#7a6c52; font-size:13px; margin:8px 0 20px; }
+      .card { background:#fefcf7; border:1px solid #e3d9c5; border-radius:12px; padding:14px; margin:14px 0; }
+      .label { font-weight:700; font-size:14px; color:#b07d33; }
+      .text { font-size:14px; line-height:1.7; white-space:pre-wrap; margin-top:4px; }
+      .summary { background:#f9f3e7; border-radius:8px; padding:14px; margin:20px 0; }
+    </style></head><body>
+    <h1>🪞 七个习惯教练 · 周报</h1>
+    <div class="meta">${weekAgo.toLocaleDateString()} — ${now.toLocaleDateString()} · 共 ${weekRecords.length} 次对话</div>
+    <div class="summary"><strong>本周习惯分布：</strong>${habitList}</div>
+    ${weekRecords.map(r => `
+      <div class="card">
+        <div class="label">📅 ${new Date(r.date).toLocaleString()}</div>
+        <div class="text">${(r.cards||[]).map(c => escapeHtml(c.text||'')).join('\n\n')}</div>
+      </div>
+    `).join('')}
+    <p style="text-align:center;color:#b8aa8e;font-size:12px;margin-top:30px">生成自 七个习惯教练 · 独立粉丝作品</p>
+    </body></html>
+  `);
+  printWin.document.close();
+  setTimeout(() => printWin.print(), 500);
+}
+
+// ── 浏览器提醒 ──
+function enableReminder() {
+  if (!('Notification' in window)) {
+    alert('你的浏览器不支持通知功能');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    scheduleReminder();
+  } else if (Notification.permission === 'denied') {
+    alert('通知权限已被拒绝，请在浏览器设置中允许通知');
+  } else {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') scheduleReminder();
+      else alert('需要允许通知才能设置提醒');
+    });
+  }
+}
+
+function scheduleReminder() {
+  const h = prompt('设置每日提醒时间（小时，0-23）：', '20');
+  if (!h) return;
+  const hour = parseInt(h);
+  if (isNaN(hour) || hour < 0 || hour > 23) { alert('请输入 0-23 的数字'); return; }
+
+  localStorage.setItem('coach_remind_hour', hour);
+
+  // 计算到目标时间的毫秒数
+  const now = new Date();
+  const target = new Date();
+  target.setHours(hour, 0, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  const delay = target.getTime() - now.getTime();
+
+  setTimeout(() => {
+    new Notification('🪞 七个习惯教练', {
+      body: '今天有什么想照一照镜子的？花 5 分钟聊聊吧。',
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🪞</text></svg>',
+    });
+    // 安排下一次提醒
+    setTimeout(() => scheduleReminder(), 1000);
+  }, delay);
+
+  showError(`✅ 每日 ${hour}:00 提醒已设置`);
+}
 async function openProgress() {
   document.getElementById('progressModal').classList.remove('hidden');
   renderProgress();
 }
 
 const HABIT_NAMES = {
-  habit1: '习惯一 积极主动',
-  habit2: '习惯二 以终为始',
-  habit3: '习惯三 要事第一',
-  habit4: '习惯四 双赢思维',
-  habit5: '习惯五 知彼解己',
-  habit6: '习惯六 统合综效',
-  habit7: '习惯七 不断更新',
+  habit1: '习惯一\n积极主动',
+  habit2: '习惯二\n以终为始',
+  habit3: '习惯三\n要事第一',
+  habit4: '习惯四\n双赢思维',
+  habit5: '习惯五\n知彼解己',
+  habit6: '习惯六\n统合综效',
+  habit7: '习惯七\n不断更新',
 };
+
+const HABIT_SHORT = {
+  habit1: '主动',
+  habit2: '终始',
+  habit3: '要事',
+  habit4: '双赢',
+  habit5: '知彼',
+  habit6: '统效',
+  habit7: '更新',
+};
+
+const HABIT_ORDER = ['habit1','habit2','habit3','habit4','habit5','habit6','habit7'];
+
+function buildRadarSVG(data) {
+  const cx = 140, cy = 140, r = 100;
+  const n = 7;
+  const levels = 4;
+
+  // 计算每个习惯的坐标
+  const points = HABIT_ORDER.map((k, i) => {
+    const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+    const val = data[k] || 0;
+    const maxR = Math.max(1, ...HABIT_ORDER.map(h => data[h] || 0));
+    const dist = maxR > 0 ? (val / maxR) * r : 0;
+    return {
+      x: cx + dist * Math.cos(angle),
+      y: cy + dist * Math.sin(angle),
+      labelX: cx + (r + 28) * Math.cos(angle),
+      labelY: cy + (r + 28) * Math.sin(angle),
+      gridX: cx + r * Math.cos(angle),
+      gridY: cy + r * Math.sin(angle),
+      val,
+      key: k,
+    };
+  });
+
+  // 背景网格
+  let gridLines = '';
+  for (let l = 1; l <= levels; l++) {
+    const lr = (r / levels) * l;
+    const pts = HABIT_ORDER.map((_, i) => {
+      const a = (Math.PI * 2 * i) / n - Math.PI / 2;
+      return `${cx + lr * Math.cos(a)},${cy + lr * Math.sin(a)}`;
+    }).join(' ');
+    const alpha = l === levels ? 0.3 : 0.12;
+    gridLines += `<polygon points="${pts}" fill="none" stroke="var(--accent-light)" stroke-width="1" opacity="${alpha}"/>`;
+  }
+
+  // 轴线
+  let axes = points.map(p =>
+    `<line x1="${cx}" y1="${cy}" x2="${p.gridX}" y2="${p.gridY}" stroke="var(--border-light)" stroke-width="1"/>`
+  ).join('');
+
+  // 数据多边形
+  const dataPts = points.map(p => `${p.x},${p.y}`).join(' ');
+  const dataPoly = `<polygon points="${dataPts}" fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-width="2"/>`;
+
+  // 数据点
+  let dots = points.map(p =>
+    `<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--accent)" stroke="white" stroke-width="1.5"/>`
+  ).join('');
+
+  // 标签
+  let labels = points.map((p, i) => {
+    const shortName = HABIT_SHORT[HABIT_ORDER[i]];
+    const valText = p.val > 0 ? ` ${p.val}` : '';
+    return `<text x="${p.labelX}" y="${p.labelY}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="var(--text-secondary)" font-weight="500">${shortName}${valText}</text>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 280 280" style="width:100%;max-width:300px;display:block;margin:0 auto">
+    ${gridLines}${axes}${dataPoly}${dots}${labels}
+  </svg>`;
+}
 
 async function renderProgress() {
   const container = document.getElementById('progressContent');
@@ -960,30 +1194,43 @@ async function renderProgress() {
       return;
     }
 
-    const sorted = Object.entries(HABIT_NAMES).map(([k, name]) => ({
-      key: k,
-      name,
-      count: progress[k] || 0,
-    }));
+    const data = {};
+    HABIT_ORDER.forEach(k => { data[k] = progress[k] || 0; });
 
-    const maxCount = Math.max(1, ...sorted.map(s => s.count));
+    // 找最强和盲区习惯
+    let topHabit = HABIT_ORDER[0], blindHabit = HABIT_ORDER[0];
+    let topVal = 0, blindVal = Infinity;
+    HABIT_ORDER.forEach(k => {
+      const v = data[k];
+      if (v > topVal) { topVal = v; topHabit = k; }
+      if (v < blindVal && v === 0) { blindVal = v; blindHabit = k; }
+    });
+    // 如果所有习惯都有数据，盲区是最低的那个
+    if (blindVal > 0) {
+      blindVal = Math.min(...Object.values(data));
+      blindHabit = HABIT_ORDER.find(k => data[k] === blindVal) || blindHabit;
+    }
+
+    const topName = HABIT_NAMES[topHabit].replace('\n','');
+    const blindName = HABIT_NAMES[blindHabit].replace('\n','');
 
     container.innerHTML =
-      `<div style="text-align:center;margin-bottom:12px"><span style="font-size:var(--font-lg);font-weight:700">${progress.total}</span> 次对话</div>` +
-      sorted.map(s => {
-        const pct = Math.round((s.count / maxCount) * 100);
-        const barColor = s.count > 0 ? 'var(--accent)' : '#e0d8c8';
-        return `<div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;font-size:var(--font-sm);margin-bottom:2px">
-            <span>${s.name}</span>
-            <span style="font-weight:600;color:${s.count > 0 ? 'var(--accent)' : 'var(--text-muted)'}">${s.count}</span>
-          </div>
-          <div style="height:6px;background:#f0e8d6;border-radius:3px">
-            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.5s"></div>
-          </div>
-        </div>`;
-      }).join('') +
-      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:16px">七个习惯教练，帮你看见自己的模式</p>';
+      `<div style="text-align:center;margin-bottom:8px">
+        <span style="font-size:var(--font-xl);font-weight:700;color:var(--accent)">${progress.total}</span>
+        <span style="font-size:var(--font-sm);color:var(--text-secondary)"> 次对话</span>
+      </div>` +
+      buildRadarSVG(data) +
+      `<div style="display:flex;gap:10px;margin-top:12px">
+        <div style="flex:1;background:var(--accent-pale);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:var(--font-xs);color:var(--text-muted)">最常照见</div>
+          <div style="font-size:var(--font-sm);font-weight:600;color:var(--accent);margin-top:2px">${topName} · ${topVal}次</div>
+        </div>
+        <div style="flex:1;background:#faf8f4;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:var(--font-xs);color:var(--text-muted)">认知盲区</div>
+          <div style="font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);margin-top:2px">${blindName} · ${blindVal}次</div>
+        </div>
+      </div>` +
+      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:12px">🪞 雷达图帮你看见七个习惯的分布</p>';
   } catch (e) {
     console.error('[renderProgress]', e);
     container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">加载失败，请重试</p>';
