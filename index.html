@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>七个习惯教练</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+<style>
+  :root {
+    /* 基础色调：暖羊皮纸 */
+    --bg: #f7f3ec;
+    --card: #fefcf7;
+    --text: #2b2314;
+    --text-secondary: #7a6c52;
+    --text-muted: #b8aa8e;
+    /* 金色 accent：暖灯，不刺眼 */
+    --accent: #b07d33;
+    --accent-hover: #9a6d2b;
+    --accent-light: #f0e4ce;
+    --accent-pale: #f9f3e7;
+    /* 气泡 */
+    --user-bubble: #ebe1cf;
+    --coach-bubble: #fefcf7;
+    /* 边框与阴影 */
+    --border: #e3d9c5;
+    --border-light: #f0e8d6;
+    --shadow-xs: 0 1px 2px rgba(44,36,22,0.03);
+    --shadow-sm: 0 2px 6px rgba(44,36,22,0.04);
+    --shadow: 0 2px 12px rgba(44,36,22,0.06);
+    --shadow-md: 0 8px 30px rgba(44,36,22,0.10);
+    /* 圆角 */
+    --radius: 18px;
+    --radius-sm: 12px;
+    --radius-xs: 8px;
+    /* 字号体系 */
+    --font-xs: 0.75rem;     /* 12px */
+    --font-sm: 0.8125rem;   /* 13px */
+    --font-base: 0.875rem;  /* 14px */
+    --font-lg: 1.125rem;    /* 18px */
+    --font-xl: 1.25rem;     /* 20px */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, #f7f3ec 0%, #f4efe5 100%);
+    color: var(--text);
+    height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* --- Header --- */
+  .header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border-light);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: var(--accent-light); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .header-sub { font-size: var(--font-xs); color: var(--text-muted); }
+
+  .btn-icon {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border-light); border-radius: var(--radius-xs);
+    background: var(--card); cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all 0.2s;
+  }
+  .btn-icon:active { background: var(--accent-light); color: var(--text); transform: scale(0.95); }
+  @media (hover: hover) { .btn-icon:hover { background: var(--accent-pale); color: var(--text); } }
+
+  /* --- Chat --- */
+  .chat {
+    flex: 1; overflow-y: auto; padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 20px;
+    scroll-behavior: smooth;
+    /* 底部留白，防止最后一条消息紧贴输入区 */
+    padding-bottom: 8px;
+  }
+  .message { max-width: 85%; animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .message.user { align-self: flex-end; }
+  .message.coach { align-self: flex-start; }
+
+  .message-label {
+    font-size: var(--font-xs); color: var(--text-muted);
+    margin-bottom: 5px; padding: 0 4px;
+    letter-spacing: 0.02em;
+  }
+
+  .bubble {
+    padding: 12px 16px; border-radius: var(--radius-sm);
+    font-size: var(--font-base); line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .message.user .bubble {
+    background: var(--user-bubble);
+    border-bottom-right-radius: 4px;
+    box-shadow: var(--shadow-xs);
+  }
+  .message.coach .bubble {
+    background: var(--coach-bubble);
+    border: 1px solid var(--border-light);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+    /* 镜子的微弱反射感 — 左侧细金线 */
+    border-left: 3px solid var(--accent-light);
+  }
+  /* 当气泡内有卡片时，减少气泡内边距 */
+  .bubble:has(.card) { padding: 8px 14px; }
+
+  /* 方案D：内联标签 — 镜/动/反 作小型标签，正文紧随其后 */
+  .card-section { margin-bottom: 0; }
+  .inline-tag {
+    display: inline-block;
+    font-size: 1rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px;
+    margin-right: 6px; vertical-align: middle;
+  }
+  .card-mirror .inline-tag { background: var(--accent-pale); color: var(--accent); }
+  .card-action .inline-tag { background: #e8f0e3; color: #527a47; }
+  .card-reflect .inline-tag { background: #e8eaf0; color: #556599; }
+  .card-body { display: inline; font-size: 0.9375rem; line-height: 1.6; color: var(--text); }
+  .card-section .card-body p,
+  .card-section .card-body ul,
+  .card-section .card-body ol,
+  .card-section .card-body li { display: inline; margin: 0; }
+
+  /* 记录按钮 */
+  .record-bar {
+    display: flex; gap: 8px; margin-top: 8px; padding-top: 6px;
+    border-top: 1px solid var(--border-light);
+  }
+  .btn-record {
+    background: none; border: 1px solid var(--border-light); border-radius: 16px;
+    padding: 5px 12px; font-size: var(--font-xs); color: var(--text-muted);
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+    transition: all 0.15s;
+  }
+  .btn-record:active { background: var(--accent-pale); color: var(--accent); border-color: var(--accent-light); }
+  @media (hover: hover) { .btn-record:hover { background: var(--accent-pale); color: var(--accent); } }
+  .btn-record.saved { color: #6a9b5e; border-color: #c8e0c0; background: #f0f7ed; }
+
+  /* 追问按钮 */
+  .followup-bar {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+  }
+  .btn-followup {
+    background: var(--card); border: 1px solid var(--border-light); border-radius: 16px;
+    padding: 6px 12px; font-size: var(--font-xs); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-followup:active { background: var(--accent-light); color: var(--text); }
+  @media (hover: hover) { .btn-followup:hover { background: var(--accent-pale); } }
+
+  /* 开场引导 */
+  .onboarding { padding: 0 16px 14px; flex-shrink: 0; }
+  .onboarding-label { font-size: var(--font-xs); color: var(--text-muted); margin-bottom: 8px; }
+  .onboarding-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn-onboard {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 14px; border: 1px solid var(--border-light); border-radius: 12px;
+    background: var(--card); cursor: pointer; font-size: var(--font-sm); color: var(--text-secondary);
+    transition: all 0.2s; box-shadow: var(--shadow-xs);
+  }
+  .btn-onboard .onboard-emoji { font-size: 18px; }
+  .btn-onboard:active { background: var(--accent-light); color: var(--text); border-color: var(--accent); transform: scale(0.97); }
+  @media (hover: hover) { .btn-onboard:hover { background: var(--accent-pale); } }
+  .onboarding-step2 { display: none; margin-top: 8px; }
+  .onboarding-step2.show { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* Markdown rendered content — 紧凑间距 */
+  .bubble h2 { font-size: var(--font-lg); margin: 6px 0 2px; font-weight: 600; }
+  .bubble h3 { font-size: var(--font-base); margin: 4px 0 2px; font-weight: 600; }
+  .bubble p { margin: 0 0 2px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul, .bubble ol { padding-left: 18px; margin: 2px 0; }
+  .bubble li { margin-bottom: 0; }
+  .bubble strong { color: var(--text); font-weight: 600; }
+  .bubble em { color: var(--text-secondary); }
+  .bubble code {
+    background: var(--accent-pale); padding: 1px 4px;
+    border-radius: 3px; font-size: 0.9em; color: var(--accent);
+  }
+  .bubble blockquote {
+    border-left: 3px solid var(--accent); padding: 4px 10px; margin: 4px 0;
+    background: var(--accent-pale); border-radius: 0 4px 4px 0;
+    color: var(--text-secondary); font-size: 0.95em;
+  }
+  .bubble hr { border: none; border-top: 1px solid var(--border-light); margin: 6px 0; }
+  .bubble p:empty { display: none; }
+
+  /* --- Typing Indicator --- */
+  .typing { display: flex; gap: 5px; padding: 6px 0 2px; align-items: center; }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); animation: bounce 1.4s infinite;
+    opacity: 0.6;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+    30% { transform: translateY(-8px); opacity: 1; }
+  }
+
+  /* --- Input --- */
+  .input-area {
+    padding: 10px 16px;
+    padding-bottom: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    display: flex; gap: 8px; align-items: flex-end;
+    flex-shrink: 0; background: var(--card);
+    border-top: 1px solid var(--border-light);
+    box-shadow: 0 -1px 4px rgba(44,36,22,0.03);
+  }
+  .input-area textarea {
+    flex: 1; padding: 12px 14px; border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm); font-size: var(--font-base); font-family: inherit;
+    resize: none; max-height: 100px; min-height: 44px;
+    background: var(--bg); color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    line-height: 1.5;
+  }
+  .input-area textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(176,125,51,0.12);
+    background: var(--card);
+  }
+  .input-area textarea::placeholder { color: var(--text-muted); }
+  .btn-send {
+    width: 44px; height: 44px; background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-sm); font-size: 20px;
+    cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(176,125,51,0.25);
+  }
+  .btn-send:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+  .btn-send:active:not(:disabled) { transform: scale(0.95); opacity: 0.9; }
+  @media (hover: hover) { .btn-send:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 4px 14px rgba(176,125,51,0.35); } }
+
+  .disclaimer {
+    text-align: center; padding: 6px 16px 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+    font-size: var(--font-xs); color: var(--text-muted); flex-shrink: 0;
+  }
+
+  /* --- Welcome / Key Setup Modal --- */
+  .modal-overlay {
+    display: flex; position: fixed; inset: 0;
+    background: rgba(30,20,10,0.45); z-index: 100;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: overlayIn 0.25s ease;
+  }
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--card); border-radius: var(--radius);
+    padding: 32px 24px 24px; width: 90%; max-width: 400px;
+    box-shadow: var(--shadow-md);
+    max-height: 90dvh; overflow-y: auto;
+    animation: modalIn 0.3s ease;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .modal-icon { font-size: 44px; text-align: center; margin-bottom: 14px; }
+  .modal h2 { font-size: var(--font-xl); text-align: center; margin-bottom: 8px; font-weight: 600; letter-spacing: -0.01em; }
+  .modal .modal-sub { font-size: var(--font-sm); color: var(--text-secondary); text-align: center; margin-bottom: 24px; line-height: 1.7; }
+
+  .steps { margin-bottom: 24px; }
+  .step {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 0; border-bottom: 1px solid var(--border-light);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; background: var(--accent-light); color: var(--accent);
+    border-radius: 50%; font-size: var(--font-xs); font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-text { font-size: var(--font-sm); line-height: 1.6; }
+  .step-text a { color: var(--accent); font-weight: 500; text-decoration: none; }
+  .step-text a:hover { text-decoration: underline; }
+
+  .modal label { font-size: var(--font-xs); color: var(--text-secondary); display: block; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .modal input {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--border-light);
+    border-radius: var(--radius-xs); font-size: var(--font-sm); margin-bottom: 6px;
+    outline: none; font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    background: var(--bg); color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .modal input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(176,125,51,0.12);
+    background: var(--card);
+  }
+  .modal .field-hint { font-size: var(--font-xs); color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+  .modal .btn-primary {
+    width: 100%; padding: 12px; background: var(--accent); color: white;
+    border: none; border-radius: var(--radius-xs); font-size: var(--font-base); font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(176,125,51,0.25);
+  }
+  .modal .btn-primary:active { background: var(--accent-hover); transform: scale(0.98); }
+  @media (hover: hover) { .modal .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 14px rgba(176,125,51,0.35); } }
+  .modal .btn-secondary {
+    width: 100%; padding: 10px; background: none; color: var(--text-muted);
+    border: none; font-size: var(--font-sm); cursor: pointer; margin-top: 8px;
+    transition: color 0.2s;
+  }
+  .modal .btn-secondary:hover { color: var(--text-secondary); }
+  .modal .error-msg { font-size: var(--font-xs); color: #c0392b; margin-bottom: 12px; display: none; }
+  .modal .error-msg.show { display: block; }
+
+  /* --- Empty state (inside chat) --- */
+  .empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 32px 24px; text-align: center;
+    /* 推进动画 */
+    animation: emptyIn 0.5s ease;
+  }
+  @keyframes emptyIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .empty-icon {
+    font-size: 52px; margin-bottom: 16px;
+    filter: drop-shadow(0 4px 12px rgba(176,125,51,0.15));
+  }
+
+  .empty h2 {
+    font-size: var(--font-lg); font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .empty .empty-sub {
+    font-size: var(--font-sm); color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* 欢迎提示横幅 */
+  .welcome-banner {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 0 16px 4px; padding: 12px 14px;
+    background: var(--accent-pale); border-radius: var(--radius-sm);
+    border: 1px solid var(--accent-light);
+    font-size: var(--font-sm); color: var(--text-secondary);
+    line-height: 1.6; animation: fadeIn 0.4s ease;
+    flex-shrink: 0;
+  }
+  .welcome-banner .banner-text { flex: 1; }
+  .welcome-banner .banner-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
+    flex-shrink: 0;
+  }
+  .welcome-banner .banner-close:active { color: var(--text); }
+  .welcome-banner.hidden { display: none; }
+
+  .error-banner {
+    display: none; background: #fef7f2; color: #8b4513;
+    padding: 10px 16px; font-size: var(--font-xs); text-align: center;
+    border-bottom: 1px solid #f5e0cc;
+    flex-shrink: 0;
+  }
+  .error-banner.show { display: block; }
+
+</style>
+</head>
+<body>
+
+<div class="error-banner" id="errorBanner"></div>
+
+<!-- ====== Key Setup Modal ====== -->
+<div class="modal-overlay" id="keyModal">
+  <div class="modal">
+    <div class="modal-icon">🪞</div>
+    <h2>欢迎使用七个习惯教练</h2>
+    <p class="modal-sub">基于《高效能人士的七个习惯》的 AI 自我教练<br>自带 API Key，免费使用，不限次数</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          打开 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a><br>
+          手机号注册（1 分钟）
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          注册后进入「API Keys」→ 新建一个 Key → 复制
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          把 Key 粘贴到下方 → 开始对话
+        </div>
+      </div>
+    </div>
+
+    <label>DeepSeek API Key</label>
+    <input type="password" id="keyInput" placeholder="sk-..." autocomplete="off">
+    <div class="field-hint">
+      💡 DeepSeek 按量计费，每次对话约几分钱，充 10 元能用很久<br>
+      🔒 Key 只存在你的浏览器里，不会上传
+    </div>
+    <div class="error-msg" id="keyError">Key 格式不对，请检查后重试</div>
+    <button class="btn-primary" id="btnSaveKey">开始使用</button>
+    <button class="btn-secondary" id="btnSkipKey">先看看，稍后设置</button>
+  </div>
+</div>
+
+<!-- ====== Records Modal ====== -->
+<div class="modal-overlay hidden" id="recordsModal">
+  <div class="modal" style="max-width:440px">
+    <h2>📋 我的反思卡片</h2>
+    <div id="recordsList" style="max-height:60dvh;overflow-y:auto;margin-bottom:12px">
+      <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无记录<br>对话后点击「💾 保存反思卡片」即可保存</p>
+    </div>
+    <button class="btn-primary" id="btnCloseRecords">关闭</button>
+    <button class="btn-secondary" id="btnClearRecords" style="color:#c0392b">清空全部记录</button>
+  </div>
+</div>
+
+<!-- ====== Main App ====== -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-icon">🪞</div>
+    <div>
+      <h1>七个习惯教练</h1>
+      <div class="header-sub">基于史蒂芬·柯维《高效能人士的七个习惯》</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-icon" id="btnRecords" title="我的记录">📋</button>
+    <button class="btn-icon" id="btnKey" title="设置 API Key">🔑</button>
+    <button class="btn-icon" id="btnReset" title="新对话">🔄</button>
+  </div>
+</header>
+
+<div class="chat" id="chat">
+  <div class="empty" id="emptyState">
+    <div class="empty-icon">🪞</div>
+    <h2>你好，我是七个习惯教练</h2>
+    <p class="empty-sub">告诉我你现在的困境</p>
+  </div>
+  <div class="welcome-banner" id="welcomeBanner">
+    <span class="banner-text">🪞 我不是来给你列知识点的，我是来帮你照镜子的。告诉我你现在的困境，我会帮你看见模式里的盲区，然后给你一个今天就能做的小动作。</span>
+    <button class="banner-close" id="bannerClose">&times;</button>
+  </div>
+</div>
+
+<div class="onboarding" id="onboardingArea">
+  <div class="onboarding-label">你现在最困扰的是？</div>
+  <div class="onboarding-grid">
+    <button class="btn-onboard" onclick="startOnboard('迷茫')"><span class="onboard-emoji">🧭</span> 迷茫方向</button>
+    <button class="btn-onboard" onclick="startOnboard('忙乱')"><span class="onboard-emoji">⏳</span> 忙而不效</button>
+    <button class="btn-onboard" onclick="startOnboard('拖延')"><span class="onboard-emoji">🐢</span> 拖延逃避</button>
+    <button class="btn-onboard" onclick="startOnboard('人际')"><span class="onboard-emoji">🤝</span> 人际冲突</button>
+    <button class="btn-onboard" onclick="startOnboard('倦怠')"><span class="onboard-emoji">🔋</span> 倦怠失衡</button>
+  </div>
+  <div class="onboarding-step2" id="onboardStep2"></div>
+</div>
+
+<div class="input-area">
+  <textarea id="input" placeholder="说说你现在的困境……" rows="1"></textarea>
+  <button class="btn-send" id="btnSend">→</button>
+</div>
+
+<div class="disclaimer">⚠️ 独立粉丝作品 · 与 FranklinCovey 无关 · 遇到严重心理困扰请寻求专业支持</div>
+
+<script>
+// ── State ──
+const DEEPSEEK_API = 'https://api.deepseek.com/chat/completions';
+let apiKey = localStorage.getItem('coach_ds_key') || '';
+let messages = [];
+let isLoading = false;
+
+// ── DOM ──
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const btnSend = document.getElementById('btnSend');
+const emptyState = document.getElementById('emptyState');
+const onboardingArea = document.getElementById('onboardingArea');
+const errorBanner = document.getElementById('errorBanner');
+const keyModal = document.getElementById('keyModal');
+const keyInput = document.getElementById('keyInput');
+const keyError = document.getElementById('keyError');
+const typingEl = createTypingIndicator();
+
+// ── System Prompt ──
+const SYSTEM_PROMPT = `你是基于史蒂芬·柯维《高效能人士的七个习惯》的自我成长教练。核心理念：认知镜子，而非任务管家——帮助用户"看见"自己的思维模式和行为盲区，不是管理待办事项。这是一个独立粉丝作品，与 FranklinCovey 无关。
+
+## 核心原则
+1. 认知镜子：帮用户看见模式，不是评判用户"懒/差/不自律"
+2. 影响圈优先：把注意力从关注圈（无法控制）拉回影响圈（能做的事）
+3. 成熟度方向：依赖→独立→互赖，不跳过阶段给建议
+4. 由内而外：从品格和思维模式入手，不是技巧
+5. P/PC 平衡：产出和产能并重，不杀鸡取卵
+6. 一个动作+一面镜子：每次只给一个行动和一个反思
+
+## 七个习惯速查
+- 习惯一 积极主动：刺激和回应之间有选择自由。影响圈vs关注圈。主动语言vs被动语言
+- 习惯二 以终为始：任何事两次创造（脑中→现实）。个人使命宣言。葬礼想象
+- 习惯三 要事第一：四象限（重要/紧急）。大石头先放。周计划>日计划。第二象限是关键
+- 习惯四 双赢思维：不是你的方式或我的方式，而是更好的方式。富足心态vs匮乏心态。情感账户
+- 习惯五 知彼解己：先诊断再开处方。同理心倾听。避免自传式回应（建议/探究/诠释/评价）
+- 习惯六 统合综效：1+1>2。重视差异。第三选择——不是妥协而是创造
+- 习惯七 不断更新：身体/精神/智力/社会情感四个维度。螺旋上升。磨刀不误砍柴工
+
+## 关键概念
+- 成熟度连续体：依赖（你照顾我）→ 独立（我可以）→ 互赖（我们一起）
+- 影响圈：我能直接控制或间接影响的事。关注圈：关心但无法控制的事
+- 情感账户：了解对方、注意小节、信守承诺、明确期望、正直、道歉
+- 四象限：重要紧急/重要不紧急/不重要紧急/不重要不紧急。第二象限是高效能关键
+- 反模式：刺激-反应、以紧急替重要、输赢思维、自传式倾听、效率崇拜、跳级、杀鹅取卵
+
+## 工作流
+1. 用一句话复述用户的困境——不评判，像镜子
+2. 定位成熟度：用户卡在依赖→独立→互赖哪个位置？
+3. 点出盲区
+4. 把模糊改写为清晰
+5. 给一个影响圈内行动：≤30分钟，明确完成条件
+6. 给一个反思问题
+
+## 输出方式（重要）
+**默认：自然对话。** 像一位有智慧的导师那样聊天。先倾听、共情、帮用户理清感受。自然地融入七个习惯的视角，而不是贴标签。
+
+**例外：只有以下情况才用三段卡：**
+1. 用户明确说"给我一个行动"、"我该怎么办"等索取具体指引的话
+2. 问题本身很简单具体（如"我明天有个重要会议但很紧张"）
+
+三段卡格式：【镜子】（1-2句点出模式）→【动作】（一个具体行动）→【反思】（一个追问）
+**注意：大部分对话不需要三段卡。聊天就好。别变成填表。**
+
+## 语气
+照镜子不贴标签。讲原则不讲道理。温和不鸡汤。用类比。不用"你应该"，用"你可以试试"。不承诺速成。
+
+## 安全边界
+遇到自伤、暴力、严重抑郁等高风险信号：先关心→建议专业支持→只给底线稳定动作→不用成长框架要求用户反思。`;
+
+// ── Init ──
+function init() {
+  if (!apiKey) {
+    keyModal.classList.remove('hidden');
+    document.getElementById('btnSend').style.opacity = '0.4';
+  }
+
+  input.addEventListener('input', () => autoResize(input));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  btnSend.addEventListener('click', send);
+  document.getElementById('btnReset').addEventListener('click', resetChat);
+  document.getElementById('btnSaveKey').addEventListener('click', saveKey);
+  document.getElementById('btnSkipKey').addEventListener('click', skipKey);
+  document.getElementById('btnKey').addEventListener('click', () => {
+    keyInput.value = apiKey;
+    keyError.classList.remove('show');
+    keyModal.classList.remove('hidden');
+  });
+  document.getElementById('bannerClose').addEventListener('click', () => {
+    document.getElementById('welcomeBanner').classList.add('hidden');
+  });
+
+  // 记录查看
+  document.getElementById('btnRecords').addEventListener('click', openRecords);
+  document.getElementById('btnCloseRecords').addEventListener('click', () => {
+    document.getElementById('recordsModal').classList.add('hidden');
+  });
+  document.getElementById('btnClearRecords').addEventListener('click', () => {
+    if (confirm('确定清空全部记录？')) {
+      localStorage.removeItem('coach_records');
+      renderRecords();
+    }
+  });
+
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+// ── Key Management ──
+function saveKey() {
+  const val = keyInput.value.trim();
+  if (!val.startsWith('sk-') || val.length < 20) {
+    keyError.classList.add('show');
+    return;
+  }
+  keyError.classList.remove('show');
+  apiKey = val;
+  localStorage.setItem('coach_ds_key', apiKey);
+  keyModal.classList.add('hidden');
+  document.getElementById('btnSend').style.opacity = '';
+  input.focus();
+}
+
+function skipKey() {
+  keyModal.classList.add('hidden');
+}
+
+// ── Chat ──
+async function send() {
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+  if (!apiKey) {
+    keyInput.value = '';
+    keyModal.classList.remove('hidden');
+    return;
+  }
+
+  input.value = '';
+  autoResize(input);
+  hideEmpty();
+  hideSuggestions();
+  hideError();
+
+  addMessage('user', text);
+  messages.push({ role: 'user', content: text });
+
+  showTyping();
+  isLoading = true;
+  btnSend.disabled = true;
+
+  try {
+    const resp = await fetch(DEEPSEEK_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+        temperature: 0.7,
+        max_tokens: 1500
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      if (resp.status === 401) {
+        apiKey = '';
+        localStorage.removeItem('coach_ds_key');
+        keyModal.classList.remove('hidden');
+        throw new Error('API Key 无效，请重新设置');
+      }
+      throw new Error(err.error?.message || `请求失败 (${resp.status})`);
+    }
+
+    const data = await resp.json();
+    const reply = data.choices[0].message.content;
+    messages.push({ role: 'assistant', content: reply });
+    removeTyping();
+    addMessage('coach', reply);
+
+  } catch (e) {
+    removeTyping();
+    showError(e.message || '请求失败，请稍后重试');
+    // 保留用户消息在 messages 中，维持对话上下文
+  } finally {
+    isLoading = false;
+    btnSend.disabled = false;
+    input.focus();
+  }
+}
+
+function parseCards(content) {
+  // 尝试按【镜子】【动作】【反思】标记拆分
+  const mirror = content.match(/【镜子】\s*([\s\S]*?)(?=【动作】|$)/);
+  const action = content.match(/【动作】\s*([\s\S]*?)(?=【反思】|$)/);
+  const reflect = content.match(/【反思】\s*([\s\S]*?)$/);
+
+  if (mirror && action && reflect) {
+    return [
+      { type: 'mirror', icon: '🪞', label: '镜子', text: mirror[1].trim() },
+      { type: 'action', icon: '🎯', label: '行动', text: action[1].trim() },
+      { type: 'reflect', icon: '💭', label: '反思', text: reflect[1].trim() }
+    ];
+  }
+  // fallback: 整段输出
+  return [{ type: 'plain', icon: '', label: '', text: content.trim() }];
+}
+
+function buildCoachHTML(content) {
+  const cards = parseCards(content);
+  if (cards.length === 1 && cards[0].type === 'plain') {
+    const compact = content.replace(/\n{3,}/g, '\n\n').trim();
+    return `<div class="bubble">${DOMPurify.sanitize(marked.parse(compact))}</div>`;
+  }
+  let html = '<div class="bubble">';
+  cards.forEach(c => {
+    html += `<div class="card-section card-${c.type}">
+      <span class="inline-tag">${c.icon} ${c.label}</span>
+      <span class="card-body">${c.text.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</span>
+    </div>`;
+  });
+  // 记录按钮
+  html += `<div class="record-bar">
+    <button class="btn-record" onclick="saveRecord(this)" data-content="${escapeAttr(JSON.stringify(cards))}">💾 保存反思卡片</button>
+  </div>`;
+  // 追问按钮
+  html += `<div class="followup-bar">
+    <button class="btn-followup" onclick="followup(this)">这个动作具体怎么做？</button>
+    <button class="btn-followup" onclick="followup(this)">我还是觉得很难开始</button>
+    <button class="btn-followup" onclick="followup(this)">换个角度帮我看看</button>
+  </div>`;
+  html += '</div>';
+  return html;
+}
+
+function addMessage(role, content) {
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  let body;
+  if (role === 'coach') {
+    body = buildCoachHTML(content);
+  } else {
+    body = `<div class="bubble">${escapeHtml(content)}</div>`;
+  }
+  div.innerHTML = `<div class="message-label">${role === 'user' ? '你' : '🪞 教练'}</div>${body}`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function escapeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showTyping() { chat.appendChild(typingEl); chat.scrollTop = chat.scrollHeight; }
+function removeTyping() { if (typingEl.parentNode) typingEl.parentNode.removeChild(typingEl); }
+
+function createTypingIndicator() {
+  const div = document.createElement('div');
+  div.className = 'message coach';
+  div.innerHTML = '<div class="message-label">🪞 教练</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  return div;
+}
+
+function resetChat() {
+  if (isLoading) return;
+  messages = [];
+  chat.innerHTML = '';
+  chat.appendChild(emptyState.cloneNode(true));
+  if (onboardingArea) onboardingArea.style.display = '';
+  document.getElementById('welcomeBanner').classList.remove('hidden');
+  hideError();
+}
+
+function hideEmpty() { const es = chat.querySelector('.empty'); if (es) es.style.display = 'none'; }
+function hideSuggestions() { const el = document.getElementById('onboardingArea'); if (el) el.style.display = 'none'; }
+
+// ── 记录查看 ──
+function openRecords() {
+  document.getElementById('recordsModal').classList.remove('hidden');
+  renderRecords();
+}
+
+function renderRecords() {
+  const list = document.getElementById('recordsList');
+  const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+  if (!records.length) {
+    list.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无记录<br>对话后点击「💾 保存反思卡片」即可保存</p>';
+    return;
+  }
+  list.innerHTML = records.map((r, i) => {
+    const d = new Date(r.date);
+    const ds = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const cards = r.cards || [];
+    const preview = cards.map(c => {
+      const full = (c.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const t = full.replace(/\n/g, ' ').slice(0, 200);
+      return `<div style="font-size:var(--font-sm);margin-top:4px;line-height:1.5"><span style="font-weight:700">${c.icon} ${c.label}</span> <span style="color:var(--text-secondary)">${t}${full.length>200?'…':''}</span></div>`;
+    }).join('');
+    const fullCards = cards.map(c => `<div style="margin-bottom:8px;line-height:1.6"><div style="font-weight:700;font-size:var(--font-base);margin-bottom:2px">${c.icon} ${c.label}</div><div style="font-size:var(--font-base);color:var(--text);white-space:pre-wrap">${(c.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>`).join('');
+    return `<div class="record-item" style="padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="this.querySelector('.record-full').classList.toggle('show')"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:var(--font-sm);font-weight:600">📅 ${ds}</span><button onclick="event.stopPropagation();deleteRecord(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px">&times;</button></div>${preview}<div class="record-full" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)">${fullCards}</div></div>`;
+  }).join('');
+}
+
+function deleteRecord(idx) {
+  const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+  records.splice(idx, 1);
+  localStorage.setItem('coach_records', JSON.stringify(records));
+  renderRecords();
+}
+
+// ── 记录保存 ──
+function saveRecord(btn) {
+  const cards = JSON.parse(btn.getAttribute('data-content'));
+  const record = {
+    date: new Date().toISOString(),
+    cards: cards
+  };
+  let records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+  records.unshift(record);
+  if (records.length > 20) records = records.slice(0, 20);
+  localStorage.setItem('coach_records', JSON.stringify(records));
+  btn.textContent = '✅ 已保存';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = '💾 保存反思卡片'; btn.classList.remove('saved'); }, 2000);
+}
+
+// ── 追问 ──
+function followup(btn) {
+  input.value = btn.textContent;
+  autoResize(input);
+  send();
+}
+
+// ── 开场引导 ──
+function startOnboard(topic) {
+  const step2 = document.getElementById('onboardStep2');
+  const map = {
+    '迷茫': ['我找不到自己真正想做的事', '我对什么都三分钟热度', '我不知道现在的工作/学习有什么意义'],
+    '忙乱': ['我每天都很忙但不知道在忙什么', '重要的事总被琐事挤掉', '我不会拒绝别人'],
+    '拖延': ['我知道该做什么但就是不动', '我总是等到最后一刻才做', '我害怕开始因为怕做不好'],
+    '人际': ['我和某个人总是冲突', '我觉得对方不理解我', '我不知道怎么和TA沟通'],
+    '倦怠': ['我最近什么都不想干', '我觉得自己被掏空了', '我很久没有进步的感觉了']
+  };
+  step2.innerHTML = (map[topic] || map['迷茫']).map(t => `<button class="btn-followup" onclick="input.value='${t}';autoResize(input);send();hideSuggestions()">${t}</button>`).join('');
+  step2.classList.add('show');
+}
+function showError(msg) { errorBanner.textContent = '⚠ ' + msg; errorBanner.classList.add('show'); }
+function hideError() { errorBanner.classList.remove('show'); }
+function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+init();
+</script>
+</body>
+</html>
+
+
+</style>
