@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>习惯镜子</title>
+<title>七个习惯教练</title>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 <style>
@@ -391,56 +391,42 @@
 
 <div class="error-banner" id="errorBanner"></div>
 
-<!-- ====== Welcome Modal (首次使用) ====== -->
-<div class="modal-overlay hidden" id="welcomeModal">
+<!-- ====== Key Setup Modal ====== -->
+<div class="modal-overlay" id="keyModal">
   <div class="modal">
     <div class="modal-icon">🪞</div>
-    <h2>欢迎使用习惯镜子</h2>
-    <p class="modal-sub">照见行为模式，看清认知盲区<br>免费试用 5 次，无需注册</p>
+    <h2>欢迎使用七个习惯教练</h2>
+    <p class="modal-sub">基于《高效能人士的七个习惯》的 AI 自我教练<br>自带 API Key，免费使用，不限次数</p>
     <div class="steps">
       <div class="step">
-        <div class="step-num">🪞</div>
-        <div class="step-text">说出你的困境——迷茫、忙乱、拖延、人际冲突、倦怠</div>
+        <div class="step-num">1</div>
+        <div class="step-text">
+          打开 <a href="https://platform.deepseek.com" target="_blank" style="color:var(--accent)">platform.deepseek.com</a><br>
+          手机号注册（1 分钟）
+        </div>
       </div>
       <div class="step">
-        <div class="step-num">🎯</div>
-        <div class="step-text">教练帮你照见盲区，给一个今天就能做的小动作</div>
+        <div class="step-num">2</div>
+        <div class="step-text">
+          注册后进入「API Keys」→ 新建一个 Key → 复制
+        </div>
       </div>
       <div class="step">
-        <div class="step-num">🔄</div>
-        <div class="step-text">5 次免费，之后可购买激活码续杯</div>
+        <div class="step-num">3</div>
+        <div class="step-text">
+          把 Key 粘贴到下方 → 开始对话
+        </div>
       </div>
     </div>
-    <button class="btn-primary" id="btnStartChat">开始对话</button>
-  </div>
-</div>
-
-<!-- ====== Activation Code Modal ====== -->
-<div class="modal-overlay hidden" id="activateModal">
-  <div class="modal">
-    <div class="modal-icon">🔑</div>
-    <h2>输入激活码</h2>
-    <p class="modal-sub">激活后立即获得更多对话次数</p>
-    <label>激活码</label>
-    <input type="text" id="codeInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off">
-    <div class="error-msg" id="codeError">激活码无效，请检查后重试</div>
-    <button class="btn-primary" id="btnActivate">验证激活</button>
-    <button class="btn-secondary" id="btnCloseActivate">取消</button>
-    <div class="field-hint" style="margin-top:16px">
-      💡 还没有激活码？<a href="https://mbd.pub" target="_blank" style="color:var(--accent)">获取激活码 →</a>
+    <label>DeepSeek API Key</label>
+    <input type="password" id="keyInput" placeholder="sk-..." autocomplete="off">
+    <div class="field-hint">
+      💡 DeepSeek 按量计费，每次对话约几分钱，充 10 元能用很久<br>
+      🔒 Key 只存在你的浏览器里，不会上传
     </div>
-  </div>
-</div>
-
-<!-- ====== Out of Quota Modal ====== -->
-<div class="modal-overlay hidden" id="quotaModal">
-  <div class="modal">
-    <div class="modal-icon">☕</div>
-    <h2>免费次数用完啦</h2>
-    <p class="modal-sub">5 次免费对话已用完<br>获取激活码继续使用</p>
-    <button class="btn-primary" id="btnGetCode">获取激活码 (¥9.9 / 30次)</button>
-    <button class="btn-secondary" id="btnEnterCode">已有激活码，输入</button>
-    <button class="btn-secondary" id="btnCloseQuota" style="color:var(--text-muted)">稍后再说</button>
+    <div class="error-msg" id="keyError">Key 格式不对，请检查后重试</div>
+    <button class="btn-primary" id="btnSaveKey">开始使用</button>
+    <button class="btn-secondary" id="btnSkipKey">先看看，稍后设置</button>
   </div>
 </div>
 
@@ -451,20 +437,19 @@
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input type="text" id="historySearch" placeholder="搜索关键词..." style="flex:1;padding:8px 10px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text);outline:none" oninput="renderRecords()">
       <select id="historyFilter" onchange="renderRecords()" style="padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-xs);background:var(--bg);color:var(--text);max-width:120px">
-        <option value="">全部维度</option>
-        <option value="habit1">主动选择</option>
-        <option value="habit2">以终为始</option>
-        <option value="habit3">聚焦要事</option>
-        <option value="habit4">共赢思维</option>
-        <option value="habit5">深度倾听</option>
-        <option value="habit6">协作共创</option>
-        <option value="habit7">持续更新</option>
+        <option value="">全部习惯</option>
+        <option value="habit1">习惯一 积极主动</option>
+        <option value="habit2">习惯二 以终为始</option>
+        <option value="habit3">习惯三 要事第一</option>
+        <option value="habit4">习惯四 双赢思维</option>
+        <option value="habit5">习惯五 知彼解己</option>
+        <option value="habit6">习惯六 统合综效</option>
+        <option value="habit7">习惯七 不断更新</option>
       </select>
     </div>
     <div id="recordsList" style="max-height:50dvh;overflow-y:auto;margin-bottom:12px">
       <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">
-        暂无记录<br>对话后点击「💾 保存反思卡片」即可保存<br>
-        <button onclick="loadCloudHistory()" style="background:none;border:1px solid var(--accent-light);color:var(--accent);padding:6px 14px;border-radius:14px;font-size:var(--font-xs);cursor:pointer;margin-top:8px">☁️ 加载云端历史</button>
+        暂无记录<br>对话后点击「💾 保存反思卡片」即可保存
       </p>
     </div>
     <button class="btn-primary" id="btnCloseRecords">关闭</button>
@@ -490,8 +475,8 @@
   <div class="header-left">
     <div class="header-icon">🪞</div>
     <div>
-      <h1>习惯镜子</h1>
-      <div class="header-sub" id="headerUsage">免费试用 5 次</div>
+      <h1>七个习惯教练</h1>
+      <div class="header-sub">基于《高效能人士的七个习惯》</div>
     </div>
   </div>
   <div style="display:flex;gap:8px">
@@ -505,7 +490,7 @@
 <div class="chat" id="chat">
   <div class="empty" id="emptyState">
     <div class="empty-icon">🪞</div>
-    <h2>你好，我是习惯镜子</h2>
+    <h2>你好，我是七个习惯教练</h2>
     <p class="empty-sub">告诉我你现在的困境</p>
   </div>
   <div class="welcome-banner" id="welcomeBanner">
@@ -531,50 +516,68 @@
   <button class="btn-send" id="btnSend">→</button>
 </div>
 
+<div class="disclaimer">⚠️ 独立粉丝作品 · 与 FranklinCovey 无关 · 遇到严重心理困扰请寻求专业支持</div>
+
 <script>
 // ── State ──
-const API_BASE = 'https://coach-api.qigexiguan-coach.workers.dev';
-let deviceId = localStorage.getItem('coach_device_id') || '';
+const DEEPSEEK_API = 'https://api.deepseek.com/chat/completions';
+let apiKey = localStorage.getItem('coach_ds_key') || '';
 let messages = [];
 let isLoading = false;
-let usageInfo = { remaining: 5, total: 5, type: 'free' };
+let lastHabit = 'habit1';
 
-// ── Device ID ──
-function getDeviceId() {
-  if (!deviceId) {
-    deviceId = 'dev-' + crypto.randomUUID();
-    localStorage.setItem('coach_device_id', deviceId);
-  }
-  return deviceId;
-}
+const SYSTEM_PROMPT = `你是基于《高效能人士的七个习惯》的自我成长教练。核心理念：认知镜子，而非任务管家——帮助用户"看见"自己的思维模式和行为盲区，不是管理待办事项。这是一个独立粉丝作品，与 FranklinCovey 无关。
 
-// ── Usage Display ──
-async function refreshUsage() {
-  try {
-    const resp = await fetch(`${API_BASE}/usage?deviceId=${getDeviceId()}`);
-    if (resp.ok) {
-      usageInfo = await resp.json();
-      updateUsageDisplay();
-    }
-  } catch (e) { console.error('[refreshUsage]', e); }
-}
+## 核心原则
+1. 认知镜子：帮用户看见模式，不是评判用户"懒/差/不自律"
+2. 影响圈优先：把注意力从关注圈（无法控制）拉回影响圈（能做的事）
+3. 成熟度方向：依赖→独立→互赖，不跳过阶段给建议
+4. 由内而外：从品格和思维模式入手，不是技巧
+5. P/PC 平衡：产出和产能并重，不杀鸡取卵
+6. 一个动作+一面镜子：每次只给一个行动和一个反思
 
-function updateUsageDisplay() {
-  const el = document.getElementById('headerUsage');
-  if (usageInfo.type === 'monthly') {
-    el.textContent = '月卡会员 · 无限次';
-  } else if (usageInfo.remaining <= 1) {
-    el.textContent = `剩余 ${usageInfo.remaining} 次 · 即将用尽`;
-  } else {
-    el.textContent = `剩余 ${usageInfo.remaining}/${usageInfo.total} 次`;
-  }
-  // 次数不足时发送按钮变灰
-  if (usageInfo.remaining <= 0 && usageInfo.type !== 'monthly') {
-    document.getElementById('btnSend').style.opacity = '0.4';
-  } else {
-    document.getElementById('btnSend').style.opacity = '';
-  }
-}
+## 七个习惯速查
+- 习惯一 积极主动：刺激和回应之间有选择自由。影响圈vs关注圈。主动语言vs被动语言
+- 习惯二 以终为始：任何事两次创造（脑中→现实）。个人使命宣言。葬礼想象
+- 习惯三 要事第一：四象限（重要/紧急）。大石头先放。周计划>日计划。第二象限是关键
+- 习惯四 双赢思维：不是你的方式或我的方式，而是更好的方式。富足心态vs匮乏心态。情感账户
+- 习惯五 知彼解己：先诊断再开处方。同理心倾听。避免自传式回应
+- 习惯六 统合综效：1+1>2。重视差异。第三选择——不是妥协而是创造
+- 习惯七 不断更新：身体/精神/智力/社会情感四个维度。螺旋上升。磨刀不误砍柴工
+
+## 关键概念
+- 成熟度连续体：依赖（你照顾我）→ 独立（我可以）→ 互赖（我们一起）
+- 影响圈：我能直接控制或间接影响的事。关注圈：关心但无法控制的事
+- 情感账户：了解对方、注意小节、信守承诺、明确期望、正直、道歉
+- 四象限：重要紧急/重要不紧急/不重要紧急/不重要不紧急
+
+## 工作流
+1. 用一句话复述用户的困境——不评判，像镜子
+2. 定位成熟度：用户卡在依赖→独立→互赖哪个位置？
+3. 点出盲区
+4. 给一个影响圈内行动：≤30分钟，明确完成条件
+5. 给一个反思问题
+
+## 输出格式（重要）
+**默认：自然对话。** 像一位有智慧的导师那样聊天。先倾听、共情、帮用户理清感受。自然地融入七个习惯的视角。
+
+**例外：只有用户明确说"给我一个行动"、"我该怎么办"等索取具体指引时，才用三段卡：**
+【镜子】（1-2句点出模式）
+【动作】（一个具体行动）
+【反思】（一个追问）
+
+**大部分对话不需要三段卡。聊天就好。别变成填表。**
+
+## 输出末尾附加习惯标签
+每次回复的最后一行，附加一个隐藏的习惯标记（用户看不到，用于后台统计）：
+<!--habit:N-->
+N 是 1-7，代表当前对话主要关联的习惯。
+
+## 语气
+照镜子不贴标签。讲原则不讲道理。温和不鸡汤。用类比。不用"你应该"，用"你可以试试"。不承诺速成。
+
+## 安全边界
+遇到自伤、暴力、严重抑郁等高风险信号：先关心→建议专业支持→只给底线稳定动作→不用成长框架要求用户反思。`;
 
 // ── DOM ──
 const chat = document.getElementById('chat');
@@ -584,19 +587,37 @@ const emptyState = document.getElementById('emptyState');
 const onboardingArea = document.getElementById('onboardingArea');
 const errorBanner = document.getElementById('errorBanner');
 const typingEl = createTypingIndicator();
+const keyModal = document.getElementById('keyModal');
+const keyInput = document.getElementById('keyInput');
+const keyError = document.getElementById('keyError');
+
+// ── Key Management ──
+function saveKey() {
+  const val = keyInput.value.trim();
+  if (!val.startsWith('sk-') || val.length < 20) {
+    keyError.classList.add('show');
+    return;
+  }
+  keyError.classList.remove('show');
+  apiKey = val;
+  localStorage.setItem('coach_ds_key', apiKey);
+  keyModal.classList.add('hidden');
+  btnSend.style.opacity = '';
+  input.focus();
+}
+
+function skipKey() {
+  keyModal.classList.add('hidden');
+  input.focus();
+}
 
 // ── Init ──
 function init() {
-  const dId = getDeviceId();
-
-  // 首次使用显示欢迎
-  if (!localStorage.getItem('coach_welcomed')) {
-    document.getElementById('welcomeModal').classList.remove('hidden');
-    localStorage.setItem('coach_welcomed', '1');
+  // 没有 Key 则显示设置弹窗
+  if (!apiKey) {
+    keyModal.classList.remove('hidden');
+    keyInput.value = '';
   }
-
-  // 加载用量
-  refreshUsage();
 
   input.addEventListener('input', () => autoResize(input));
   input.addEventListener('keydown', e => {
@@ -608,26 +629,11 @@ function init() {
     document.getElementById('welcomeBanner').classList.add('hidden');
   });
 
-  // 欢迎弹窗
-  document.getElementById('btnStartChat').addEventListener('click', () => {
-    document.getElementById('welcomeModal').classList.add('hidden');
-    input.focus();
-  });
-
-  // 激活码弹窗
-  document.getElementById('btnEnterCode').addEventListener('click', () => {
-    document.getElementById('quotaModal').classList.add('hidden');
-    document.getElementById('activateModal').classList.remove('hidden');
-  });
-  document.getElementById('btnGetCode').addEventListener('click', () => {
-    window.open('https://mbd.pub', '_blank');
-  });
-  document.getElementById('btnCloseQuota').addEventListener('click', () => {
-    document.getElementById('quotaModal').classList.add('hidden');
-  });
-  document.getElementById('btnActivate').addEventListener('click', activateCode);
-  document.getElementById('btnCloseActivate').addEventListener('click', () => {
-    document.getElementById('activateModal').classList.add('hidden');
+  // Key 弹窗
+  document.getElementById('btnSaveKey').addEventListener('click', saveKey);
+  document.getElementById('btnSkipKey').addEventListener('click', skipKey);
+  keyInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveKey();
   });
 
   // 记录查看
@@ -659,50 +665,21 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
 
-// ── Activation Code ──
-async function activateCode() {
-  const code = document.getElementById('codeInput').value.trim();
-  if (!code) return;
-
-  const codeError = document.getElementById('codeError');
-  codeError.classList.remove('show');
-
-  try {
-    const resp = await fetch(`${API_BASE}/activate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId: getDeviceId(), code }),
-    });
-
-    const data = await resp.json();
-    if (!resp.ok) {
-      codeError.textContent = data.error || '激活失败';
-      codeError.classList.add('show');
-      return;
-    }
-
-    usageInfo.remaining = data.remaining;
-    usageInfo.total = data.total;
-    usageInfo.type = data.type;
-    updateUsageDisplay();
-    document.getElementById('activateModal').classList.add('hidden');
-    document.getElementById('codeInput').value = '';
-    document.getElementById('quotaModal').classList.add('hidden');
-    showError('✅ 激活成功！' + (data.type === 'monthly' ? '月卡已生效' : `已增加 ${data.addedCount} 次对话`));
-  } catch (e) {
-    codeError.textContent = '网络错误，请重试';
-    codeError.classList.add('show');
-  }
+// ── Chat ──
+function updateLocalProgress(habit) {
+  const raw = localStorage.getItem('coach_progress') || '{"habit1":0,"habit2":0,"habit3":0,"habit4":0,"habit5":0,"habit6":0,"habit7":0,"total":0}';
+  const progress = JSON.parse(raw);
+  progress[habit] = (progress[habit] || 0) + 1;
+  progress.total = (progress.total || 0) + 1;
+  localStorage.setItem('coach_progress', JSON.stringify(progress));
 }
 
-// ── Chat ──
 async function send() {
   const text = input.value.trim();
   if (!text || isLoading) return;
-
-  // 检查次数
-  if (usageInfo.remaining <= 0 && usageInfo.type !== 'monthly') {
-    document.getElementById('quotaModal').classList.remove('hidden');
+  if (!apiKey) {
+    keyInput.value = '';
+    keyModal.classList.remove('hidden');
     return;
   }
 
@@ -720,48 +697,48 @@ async function send() {
   btnSend.disabled = true;
 
   try {
-    // 20 秒超时，移动网络可能较慢
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
 
-    const resp = await fetch(`${API_BASE}/chat`, {
+    const resp = await fetch(DEEPSEEK_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({
-        deviceId: getDeviceId(),
-        message: text,
-        history: messages.slice(-20),
+        model: 'deepseek-chat',
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+        temperature: 0.7,
+        max_tokens: 1500,
       }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
 
-    if (resp.status === 402) {
+    if (resp.status === 401) {
       removeTyping();
-      usageInfo.remaining = 0;
-      updateUsageDisplay();
-      document.getElementById('quotaModal').classList.remove('hidden');
-      isLoading = false;
-      btnSend.disabled = false;
-      return;
+      apiKey = '';
+      localStorage.removeItem('coach_ds_key');
+      keyModal.classList.remove('hidden');
+      keyInput.value = '';
+      throw new Error('API Key 无效，请重新设置');
     }
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error || `服务器错误 (${resp.status})`);
+      throw new Error(err.error?.message || `请求失败 (${resp.status})`);
     }
 
     const data = await resp.json();
-    const reply = data.reply;
+    const reply = data.choices[0].message.content;
     messages.push({ role: 'assistant', content: reply });
     removeTyping();
     addMessage('coach', reply);
 
-    // 更新用量
-    usageInfo.remaining = data.remaining;
-    usageInfo.total = data.total;
-    usageInfo.type = data.type;
-    updateUsageDisplay();
+    // 提取习惯标签并更新本地进度
+    const habitMatch = reply.match(/<!--habit:(\d)-->/);
+    if (habitMatch) {
+      lastHabit = 'habit' + habitMatch[1];
+      updateLocalProgress(lastHabit);
+    }
 
   } catch (e) {
     removeTyping();
@@ -863,27 +840,15 @@ function hideEmpty() { const es = chat.querySelector('.empty'); if (es) es.style
 function hideSuggestions() { const el = document.getElementById('onboardingArea'); if (el) el.style.display = 'none'; }
 
 // ── 记录查看 ──
-let cloudHistoryCache = null;
-
 function openRecords() {
   document.getElementById('recordsModal').classList.remove('hidden');
   document.getElementById('historySearch').value = '';
   document.getElementById('historyFilter').value = '';
-  cloudHistoryCache = null;
   renderRecords();
 }
 
-// 合并云端+本地记录
 function getMergedRecords() {
-  const local = JSON.parse(localStorage.getItem('coach_records') || '[]');
-  const cloud = (cloudHistoryCache || []).map(h => ({
-    date: h.date,
-    source: 'cloud',
-    cards: [{ type: 'mirror', icon: '🪞', label: '对话', text: `你：${h.user}\n\n教练：${h.reply}` }],
-    habit: h.habit,
-  }));
-  // 合并并按时间倒序
-  return [...local.map(r => ({...r, source: 'local'})), ...cloud].sort((a, b) => new Date(b.date) - new Date(a.date));
+  return JSON.parse(localStorage.getItem('coach_records') || '[]');
 }
 
 function renderRecords() {
@@ -906,7 +871,7 @@ function renderRecords() {
   }
 
   if (!records.length) {
-    list.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无匹配记录<br><button onclick="loadCloudHistory()" style="background:none;border:1px solid var(--accent-light);color:var(--accent);padding:6px 14px;border-radius:14px;font-size:var(--font-xs);cursor:pointer;margin-top:8px">☁️ 加载云端历史</button></p>';
+    list.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无本地记录<br><span style="font-size:var(--font-xs)">对话后点击「💾 保存反思卡片」即可保存</span></p>';
     return;
   }
 
@@ -925,17 +890,6 @@ function renderRecords() {
   }).join('');
 }
 
-async function loadCloudHistory() {
-  try {
-    const resp = await fetch(`${API_BASE}/history?deviceId=${getDeviceId()}`);
-    if (!resp.ok) throw new Error('加载失败');
-    cloudHistoryCache = await resp.json();
-    renderRecords();
-  } catch (e) {
-    console.error('[loadCloudHistory]', e);
-  }
-}
-
 function deleteRecord(idx) {
   const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
   records.splice(idx, 1);
@@ -948,7 +902,8 @@ function saveRecord(btn) {
   const cards = JSON.parse(btn.getAttribute('data-content'));
   const record = {
     date: new Date().toISOString(),
-    cards: cards
+    cards: cards,
+    habit: lastHabit,
   };
   let records = JSON.parse(localStorage.getItem('coach_records') || '[]');
   records.unshift(record);
@@ -988,31 +943,37 @@ function hideError() { errorBanner.classList.remove('show'); }
 function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
 // ── 导出全部卡片 ──
-async function exportAllCards() {
-  try {
-    const resp = await fetch(`${API_BASE}/export?deviceId=${getDeviceId()}`);
-    if (!resp.ok) throw new Error('导出失败');
-    const cards = await resp.json();
-
-    if (!cards.length) {
-      alert('暂无对话记录可导出');
-      return;
-    }
-
-    // 生成一个 .zip 或用逐个下载的方式
-    // 简单方案：合并为一个 .md 文件下载
-    const all = cards.map(c => c.content).join('\n\n---\n\n');
-    const blob = new Blob([all], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reflections-${new Date().toISOString().slice(0, 10)}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    console.error('[exportAllCards]', e);
-    alert('导出失败，请重试');
+function exportAllCards() {
+  const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+  if (!records.length) {
+    alert('暂无记录可导出');
+    return;
   }
+
+  const all = records.map(r => {
+    const d = new Date(r.date);
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const habitName = r.habit ? (HABIT_NAMES[r.habit] || r.habit).replace('\n','') : '未分类';
+    return `---
+date: ${r.date}
+habit: ${r.habit || ''}
+version: 1
+---
+
+## 镜子
+${(r.cards||[]).map(c => c.text||'').join('\n\n')}
+
+> 习惯维度：${habitName} | 日期：${ds}
+`;
+  }).join('\n\n---\n\n');
+
+  const blob = new Blob([all], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reflections-${new Date().toISOString().slice(0, 10)}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── PDF 周报导出 ──
@@ -1038,7 +999,7 @@ function exportWeekReport() {
   // 用浏览器打印功能导出 PDF
   const printWin = window.open('', '_blank', 'width=700,height=800');
   printWin.document.write(`
-    <html><head><meta charset="UTF-8"><title>习惯镜子 · 周报</title>
+    <html><head><meta charset="UTF-8"><title>七个习惯教练 · 周报</title>
     <style>
       body { font-family: "PingFang SC","Microsoft YaHei",sans-serif; color:#2b2314; padding:32px; max-width:600px; margin:auto; }
       h1 { font-size:22px; border-bottom:2px solid #b07d33; padding-bottom:8px; }
@@ -1048,7 +1009,7 @@ function exportWeekReport() {
       .text { font-size:14px; line-height:1.7; white-space:pre-wrap; margin-top:4px; }
       .summary { background:#f9f3e7; border-radius:8px; padding:14px; margin:20px 0; }
     </style></head><body>
-    <h1>🪞 习惯镜子 · 周报</h1>
+    <h1>🪞 七个习惯教练 · 周报</h1>
     <div class="meta">${weekAgo.toLocaleDateString()} — ${now.toLocaleDateString()} · 共 ${weekRecords.length} 次对话</div>
     <div class="summary"><strong>本周习惯分布：</strong>${habitList}</div>
     ${weekRecords.map(r => `
@@ -1057,7 +1018,7 @@ function exportWeekReport() {
         <div class="text">${(r.cards||[]).map(c => escapeHtml(c.text||'')).join('\n\n')}</div>
       </div>
     `).join('')}
-    <p style="text-align:center;color:#b8aa8e;font-size:12px;margin-top:30px">生成自 习惯镜子</p>
+    <p style="text-align:center;color:#b8aa8e;font-size:12px;margin-top:30px">生成自 七个习惯教练 · 独立粉丝作品</p>
     </body></html>
   `);
   printWin.document.close();
@@ -1159,7 +1120,7 @@ function scheduleAllReminders() {
     if (target <= now) target.setDate(target.getDate() + 1);
     const delay = target.getTime() - now.getTime();
     const timer = setTimeout(() => {
-      new Notification('🪞 习惯镜子', { body: r.message });
+      new Notification('🪞 七个习惯教练', { body: r.message });
       // 重新安排
       scheduleAllReminders();
     }, delay);
@@ -1175,13 +1136,13 @@ async function openProgress() {
 }
 
 const HABIT_NAMES = {
-  habit1: '主动选择',
-  habit2: '以终为始',
-  habit3: '聚焦要事',
-  habit4: '共赢思维',
-  habit5: '深度倾听',
-  habit6: '协作共创',
-  habit7: '持续更新',
+  habit1: '习惯一\n积极主动',
+  habit2: '习惯二\n以终为始',
+  habit3: '习惯三\n要事第一',
+  habit4: '习惯四\n双赢思维',
+  habit5: '习惯五\n知彼解己',
+  habit6: '习惯六\n统合综效',
+  habit7: '习惯七\n不断更新',
 };
 
 const HABIT_SHORT = {
@@ -1257,12 +1218,11 @@ function buildRadarSVG(data) {
   </svg>`;
 }
 
-async function renderProgress() {
+function renderProgress() {
   const container = document.getElementById('progressContent');
   try {
-    const resp = await fetch(`${API_BASE}/progress?deviceId=${getDeviceId()}`);
-    if (!resp.ok) throw new Error('加载失败');
-    const progress = await resp.json();
+    const raw = localStorage.getItem('coach_progress') || '{"habit1":0,"habit2":0,"habit3":0,"habit4":0,"habit5":0,"habit6":0,"habit7":0,"total":0}';
+    const progress = JSON.parse(raw);
 
     if (!progress.total) {
       container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无数据<br>开始对话后会自动记录</p>';
@@ -1305,7 +1265,7 @@ async function renderProgress() {
           <div style="font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);margin-top:2px">${blindName} · ${blindVal}次</div>
         </div>
       </div>` +
-      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:12px">🪞 雷达图帮你看见各维度的分布</p>';
+      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:12px">🪞 雷达图帮你看见七个习惯的分布</p>';
   } catch (e) {
     console.error('[renderProgress]', e);
     container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">加载失败，请重试</p>';
@@ -1314,8 +1274,5 @@ async function renderProgress() {
 
 init();
 </script>
-<footer style="text-align:center;padding:12px 16px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-light);flex-shrink:0">
-  习惯镜子 · 独立个人作品 · 灵感来源于史蒂芬·柯维的著作，与其无关，不隶属于 FranklinCovey 或其关联机构
-</footer>
 </body>
 </html>
