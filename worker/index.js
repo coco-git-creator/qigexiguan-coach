@@ -163,6 +163,12 @@ async function handleChat(request, env) {
     }
   }
 
+  // 检查 API Key
+  if (!env.DEEPSEEK_KEY) {
+    console.error('[handleChat] DEEPSEEK_KEY 未设置');
+    return error('服务器配置错误：API Key 未设置', 500);
+  }
+
   // 调用 DeepSeek
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -186,8 +192,8 @@ async function handleChat(request, env) {
 
   if (!resp.ok) {
     const errBody = await resp.json().catch(() => ({}));
-    console.error('[DeepSeek] API 错误:', resp.status, errBody);
-    return error(errBody.error?.message || `DeepSeek API 错误 (${resp.status})`, 502);
+    console.error('[DeepSeek] API 错误:', resp.status, JSON.stringify(errBody));
+    return error(errBody.error?.message || `DeepSeek API 错误 (${resp.status}): ${JSON.stringify(errBody).slice(0, 200)}`, 502);
   }
 
   const data = await resp.json();
@@ -364,9 +370,15 @@ export default {
         return handleExport(request, env);
       }
 
-      // 健康检查
+      // 健康检查(含Key诊断)
       if (path === '/health') {
-        return json({ status: 'ok', timestamp: new Date().toISOString() });
+        return json({
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+          hasKey: !!env.DEEPSEEK_KEY,
+          keyLen: (env.DEEPSEEK_KEY || '').length,
+          keyPrefix: (env.DEEPSEEK_KEY || '').slice(0, 5),
+        });
       }
 
       return error('Not found', 404);
