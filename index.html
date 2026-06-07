@@ -440,6 +440,7 @@
     <p class="modal-sub">5 次免费对话已用完<br>获取激活码继续使用</p>
     <button class="btn-primary" id="btnGetCode">获取激活码 (¥9.9 / 30次)</button>
     <button class="btn-secondary" id="btnEnterCode">已有激活码，输入</button>
+    <button class="btn-secondary" id="btnCloseQuota" style="color:var(--text-muted)">稍后再说</button>
   </div>
 </div>
 
@@ -622,6 +623,9 @@ function init() {
   });
   document.getElementById('btnGetCode').addEventListener('click', () => {
     window.open('https://mbd.pub', '_blank');
+  });
+  document.getElementById('btnCloseQuota').addEventListener('click', () => {
+    document.getElementById('quotaModal').classList.add('hidden');
   });
   document.getElementById('btnActivate').addEventListener('click', activateCode);
   document.getElementById('btnCloseActivate').addEventListener('click', () => {
