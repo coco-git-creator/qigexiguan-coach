@@ -391,44 +391,55 @@
 
 <div class="error-banner" id="errorBanner"></div>
 
-<!-- ====== Key Setup Modal ====== -->
-<div class="modal-overlay" id="keyModal">
+<!-- ====== Welcome Modal (首次使用) ====== -->
+<div class="modal-overlay hidden" id="welcomeModal">
   <div class="modal">
     <div class="modal-icon">🪞</div>
     <h2>欢迎使用七个习惯教练</h2>
-    <p class="modal-sub">基于《高效能人士的七个习惯》的 AI 自我教练<br>自带 API Key，免费使用，不限次数</p>
-
+    <p class="modal-sub">基于《高效能人士的七个习惯》的 AI 自我教练<br>免费试用 5 次，无需注册</p>
     <div class="steps">
       <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text">
-          打开 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a><br>
-          手机号注册（1 分钟）
-        </div>
+        <div class="step-num">🪞</div>
+        <div class="step-text">说出你的困境——迷茫、忙乱、拖延、人际冲突、倦怠</div>
       </div>
       <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text">
-          注册后进入「API Keys」→ 新建一个 Key → 复制
-        </div>
+        <div class="step-num">🎯</div>
+        <div class="step-text">教练帮你照见盲区，给一个今天就能做的小动作</div>
       </div>
       <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text">
-          把 Key 粘贴到下方 → 开始对话
-        </div>
+        <div class="step-num">🔄</div>
+        <div class="step-text">5 次免费，之后可购买激活码续杯</div>
       </div>
     </div>
+    <button class="btn-primary" id="btnStartChat">开始对话</button>
+  </div>
+</div>
 
-    <label>DeepSeek API Key</label>
-    <input type="password" id="keyInput" placeholder="sk-..." autocomplete="off">
-    <div class="field-hint">
-      💡 DeepSeek 按量计费，每次对话约几分钱，充 10 元能用很久<br>
-      🔒 Key 只存在你的浏览器里，不会上传
+<!-- ====== Activation Code Modal ====== -->
+<div class="modal-overlay hidden" id="activateModal">
+  <div class="modal">
+    <div class="modal-icon">🔑</div>
+    <h2>输入激活码</h2>
+    <p class="modal-sub">激活后立即获得更多对话次数</p>
+    <label>激活码</label>
+    <input type="text" id="codeInput" placeholder="XXXX-XXXX-XXXX" autocomplete="off">
+    <div class="error-msg" id="codeError">激活码无效，请检查后重试</div>
+    <button class="btn-primary" id="btnActivate">验证激活</button>
+    <button class="btn-secondary" id="btnCloseActivate">取消</button>
+    <div class="field-hint" style="margin-top:16px">
+      💡 还没有激活码？<a href="https://mbd.pub" target="_blank" style="color:var(--accent)">获取激活码 →</a>
     </div>
-    <div class="error-msg" id="keyError">Key 格式不对，请检查后重试</div>
-    <button class="btn-primary" id="btnSaveKey">开始使用</button>
-    <button class="btn-secondary" id="btnSkipKey">先看看，稍后设置</button>
+  </div>
+</div>
+
+<!-- ====== Out of Quota Modal ====== -->
+<div class="modal-overlay hidden" id="quotaModal">
+  <div class="modal">
+    <div class="modal-icon">☕</div>
+    <h2>免费次数用完啦</h2>
+    <p class="modal-sub">5 次免费对话已用完<br>获取激活码继续使用</p>
+    <button class="btn-primary" id="btnGetCode">获取激活码 (¥9.9 / 30次)</button>
+    <button class="btn-secondary" id="btnEnterCode">已有激活码，输入</button>
   </div>
 </div>
 
@@ -440,7 +451,19 @@
       <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无记录<br>对话后点击「💾 保存反思卡片」即可保存</p>
     </div>
     <button class="btn-primary" id="btnCloseRecords">关闭</button>
+    <button class="btn-secondary" id="btnExportAll" style="color:var(--accent)">📥 导出全部卡片</button>
     <button class="btn-secondary" id="btnClearRecords" style="color:#c0392b">清空全部记录</button>
+  </div>
+</div>
+
+<!-- ====== Progress Modal ====== -->
+<div class="modal-overlay hidden" id="progressModal">
+  <div class="modal" style="max-width:440px">
+    <h2>📊 我的成长</h2>
+    <div id="progressContent" style="max-height:60dvh;overflow-y:auto;margin-bottom:12px">
+      <p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无数据<br>开始对话后会自动记录</p>
+    </div>
+    <button class="btn-primary" id="btnCloseProgress">关闭</button>
   </div>
 </div>
 
@@ -450,12 +473,12 @@
     <div class="header-icon">🪞</div>
     <div>
       <h1>七个习惯教练</h1>
-      <div class="header-sub">基于史蒂芬·柯维《高效能人士的七个习惯》</div>
+      <div class="header-sub" id="headerUsage">免费试用 5 次</div>
     </div>
   </div>
   <div style="display:flex;gap:8px">
+    <button class="btn-icon" id="btnProgress" title="我的进展">📊</button>
     <button class="btn-icon" id="btnRecords" title="我的记录">📋</button>
-    <button class="btn-icon" id="btnKey" title="设置 API Key">🔑</button>
     <button class="btn-icon" id="btnReset" title="新对话">🔄</button>
   </div>
 </header>
@@ -493,10 +516,48 @@
 
 <script>
 // ── State ──
-const DEEPSEEK_API = 'https://api.deepseek.com/chat/completions';
-let apiKey = localStorage.getItem('coach_ds_key') || '';
+const API_BASE = 'https://coach-api.qigexiguan-coach.workers.dev';
+let deviceId = localStorage.getItem('coach_device_id') || '';
 let messages = [];
 let isLoading = false;
+let usageInfo = { remaining: 5, total: 5, type: 'free' };
+
+// ── Device ID ──
+function getDeviceId() {
+  if (!deviceId) {
+    deviceId = 'dev-' + crypto.randomUUID();
+    localStorage.setItem('coach_device_id', deviceId);
+  }
+  return deviceId;
+}
+
+// ── Usage Display ──
+async function refreshUsage() {
+  try {
+    const resp = await fetch(`${API_BASE}/usage?deviceId=${getDeviceId()}`);
+    if (resp.ok) {
+      usageInfo = await resp.json();
+      updateUsageDisplay();
+    }
+  } catch (e) { console.error('[refreshUsage]', e); }
+}
+
+function updateUsageDisplay() {
+  const el = document.getElementById('headerUsage');
+  if (usageInfo.type === 'monthly') {
+    el.textContent = '月卡会员 · 无限次';
+  } else if (usageInfo.remaining <= 1) {
+    el.textContent = `剩余 ${usageInfo.remaining} 次 · 即将用尽`;
+  } else {
+    el.textContent = `剩余 ${usageInfo.remaining}/${usageInfo.total} 次`;
+  }
+  // 次数不足时发送按钮变灰
+  if (usageInfo.remaining <= 0 && usageInfo.type !== 'monthly') {
+    document.getElementById('btnSend').style.opacity = '0.4';
+  } else {
+    document.getElementById('btnSend').style.opacity = '';
+  }
+}
 
 // ── DOM ──
 const chat = document.getElementById('chat');
@@ -505,68 +566,20 @@ const btnSend = document.getElementById('btnSend');
 const emptyState = document.getElementById('emptyState');
 const onboardingArea = document.getElementById('onboardingArea');
 const errorBanner = document.getElementById('errorBanner');
-const keyModal = document.getElementById('keyModal');
-const keyInput = document.getElementById('keyInput');
-const keyError = document.getElementById('keyError');
 const typingEl = createTypingIndicator();
-
-// ── System Prompt ──
-const SYSTEM_PROMPT = `你是基于史蒂芬·柯维《高效能人士的七个习惯》的自我成长教练。核心理念：认知镜子，而非任务管家——帮助用户"看见"自己的思维模式和行为盲区，不是管理待办事项。这是一个独立粉丝作品，与 FranklinCovey 无关。
-
-## 核心原则
-1. 认知镜子：帮用户看见模式，不是评判用户"懒/差/不自律"
-2. 影响圈优先：把注意力从关注圈（无法控制）拉回影响圈（能做的事）
-3. 成熟度方向：依赖→独立→互赖，不跳过阶段给建议
-4. 由内而外：从品格和思维模式入手，不是技巧
-5. P/PC 平衡：产出和产能并重，不杀鸡取卵
-6. 一个动作+一面镜子：每次只给一个行动和一个反思
-
-## 七个习惯速查
-- 习惯一 积极主动：刺激和回应之间有选择自由。影响圈vs关注圈。主动语言vs被动语言
-- 习惯二 以终为始：任何事两次创造（脑中→现实）。个人使命宣言。葬礼想象
-- 习惯三 要事第一：四象限（重要/紧急）。大石头先放。周计划>日计划。第二象限是关键
-- 习惯四 双赢思维：不是你的方式或我的方式，而是更好的方式。富足心态vs匮乏心态。情感账户
-- 习惯五 知彼解己：先诊断再开处方。同理心倾听。避免自传式回应（建议/探究/诠释/评价）
-- 习惯六 统合综效：1+1>2。重视差异。第三选择——不是妥协而是创造
-- 习惯七 不断更新：身体/精神/智力/社会情感四个维度。螺旋上升。磨刀不误砍柴工
-
-## 关键概念
-- 成熟度连续体：依赖（你照顾我）→ 独立（我可以）→ 互赖（我们一起）
-- 影响圈：我能直接控制或间接影响的事。关注圈：关心但无法控制的事
-- 情感账户：了解对方、注意小节、信守承诺、明确期望、正直、道歉
-- 四象限：重要紧急/重要不紧急/不重要紧急/不重要不紧急。第二象限是高效能关键
-- 反模式：刺激-反应、以紧急替重要、输赢思维、自传式倾听、效率崇拜、跳级、杀鹅取卵
-
-## 工作流
-1. 用一句话复述用户的困境——不评判，像镜子
-2. 定位成熟度：用户卡在依赖→独立→互赖哪个位置？
-3. 点出盲区
-4. 把模糊改写为清晰
-5. 给一个影响圈内行动：≤30分钟，明确完成条件
-6. 给一个反思问题
-
-## 输出方式（重要）
-**默认：自然对话。** 像一位有智慧的导师那样聊天。先倾听、共情、帮用户理清感受。自然地融入七个习惯的视角，而不是贴标签。
-
-**例外：只有以下情况才用三段卡：**
-1. 用户明确说"给我一个行动"、"我该怎么办"等索取具体指引的话
-2. 问题本身很简单具体（如"我明天有个重要会议但很紧张"）
-
-三段卡格式：【镜子】（1-2句点出模式）→【动作】（一个具体行动）→【反思】（一个追问）
-**注意：大部分对话不需要三段卡。聊天就好。别变成填表。**
-
-## 语气
-照镜子不贴标签。讲原则不讲道理。温和不鸡汤。用类比。不用"你应该"，用"你可以试试"。不承诺速成。
-
-## 安全边界
-遇到自伤、暴力、严重抑郁等高风险信号：先关心→建议专业支持→只给底线稳定动作→不用成长框架要求用户反思。`;
 
 // ── Init ──
 function init() {
-  if (!apiKey) {
-    keyModal.classList.remove('hidden');
-    document.getElementById('btnSend').style.opacity = '0.4';
+  const dId = getDeviceId();
+
+  // 首次使用显示欢迎
+  if (!localStorage.getItem('coach_welcomed')) {
+    document.getElementById('welcomeModal').classList.remove('hidden');
+    localStorage.setItem('coach_welcomed', '1');
   }
+
+  // 加载用量
+  refreshUsage();
 
   input.addEventListener('input', () => autoResize(input));
   input.addEventListener('keydown', e => {
@@ -574,15 +587,27 @@ function init() {
   });
   btnSend.addEventListener('click', send);
   document.getElementById('btnReset').addEventListener('click', resetChat);
-  document.getElementById('btnSaveKey').addEventListener('click', saveKey);
-  document.getElementById('btnSkipKey').addEventListener('click', skipKey);
-  document.getElementById('btnKey').addEventListener('click', () => {
-    keyInput.value = apiKey;
-    keyError.classList.remove('show');
-    keyModal.classList.remove('hidden');
-  });
   document.getElementById('bannerClose').addEventListener('click', () => {
     document.getElementById('welcomeBanner').classList.add('hidden');
+  });
+
+  // 欢迎弹窗
+  document.getElementById('btnStartChat').addEventListener('click', () => {
+    document.getElementById('welcomeModal').classList.add('hidden');
+    input.focus();
+  });
+
+  // 激活码弹窗
+  document.getElementById('btnEnterCode').addEventListener('click', () => {
+    document.getElementById('quotaModal').classList.add('hidden');
+    document.getElementById('activateModal').classList.remove('hidden');
+  });
+  document.getElementById('btnGetCode').addEventListener('click', () => {
+    window.open('https://mbd.pub', '_blank');
+  });
+  document.getElementById('btnActivate').addEventListener('click', activateCode);
+  document.getElementById('btnCloseActivate').addEventListener('click', () => {
+    document.getElementById('activateModal').classList.add('hidden');
   });
 
   // 记录查看
@@ -596,7 +621,13 @@ function init() {
       renderRecords();
     }
   });
+  document.getElementById('btnExportAll').addEventListener('click', exportAllCards);
 
+  // 进度面板
+  document.getElementById('btnProgress').addEventListener('click', openProgress);
+  document.getElementById('btnCloseProgress').addEventListener('click', () => {
+    document.getElementById('progressModal').classList.add('hidden');
+  });
 }
 
 function autoResize(el) {
@@ -604,32 +635,50 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
 
-// ── Key Management ──
-function saveKey() {
-  const val = keyInput.value.trim();
-  if (!val.startsWith('sk-') || val.length < 20) {
-    keyError.classList.add('show');
-    return;
-  }
-  keyError.classList.remove('show');
-  apiKey = val;
-  localStorage.setItem('coach_ds_key', apiKey);
-  keyModal.classList.add('hidden');
-  document.getElementById('btnSend').style.opacity = '';
-  input.focus();
-}
+// ── Activation Code ──
+async function activateCode() {
+  const code = document.getElementById('codeInput').value.trim();
+  if (!code) return;
 
-function skipKey() {
-  keyModal.classList.add('hidden');
+  const codeError = document.getElementById('codeError');
+  codeError.classList.remove('show');
+
+  try {
+    const resp = await fetch(`${API_BASE}/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId: getDeviceId(), code }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) {
+      codeError.textContent = data.error || '激活失败';
+      codeError.classList.add('show');
+      return;
+    }
+
+    usageInfo.remaining = data.remaining;
+    usageInfo.total = data.total;
+    usageInfo.type = data.type;
+    updateUsageDisplay();
+    document.getElementById('activateModal').classList.add('hidden');
+    document.getElementById('codeInput').value = '';
+    document.getElementById('quotaModal').classList.add('hidden');
+    showError('✅ 激活成功！' + (data.type === 'monthly' ? '月卡已生效' : `已增加 ${data.addedCount} 次对话`));
+  } catch (e) {
+    codeError.textContent = '网络错误，请重试';
+    codeError.classList.add('show');
+  }
 }
 
 // ── Chat ──
 async function send() {
   const text = input.value.trim();
   if (!text || isLoading) return;
-  if (!apiKey) {
-    keyInput.value = '';
-    keyModal.classList.remove('hidden');
+
+  // 检查次数
+  if (usageInfo.remaining <= 0 && usageInfo.type !== 'monthly') {
+    document.getElementById('quotaModal').classList.remove('hidden');
     return;
   }
 
@@ -647,38 +696,46 @@ async function send() {
   btnSend.disabled = true;
 
   try {
-    const resp = await fetch(DEEPSEEK_API, {
+    const resp = await fetch(`${API_BASE}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
-        temperature: 0.7,
-        max_tokens: 1500
-      })
+        deviceId: getDeviceId(),
+        message: text,
+        history: messages.slice(-20),
+      }),
     });
+
+    if (resp.status === 402) {
+      removeTyping();
+      usageInfo.remaining = 0;
+      updateUsageDisplay();
+      document.getElementById('quotaModal').classList.remove('hidden');
+      isLoading = false;
+      btnSend.disabled = false;
+      return;
+    }
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      if (resp.status === 401) {
-        apiKey = '';
-        localStorage.removeItem('coach_ds_key');
-        keyModal.classList.remove('hidden');
-        throw new Error('API Key 无效，请重新设置');
-      }
-      throw new Error(err.error?.message || `请求失败 (${resp.status})`);
+      throw new Error(err.error || `服务器错误 (${resp.status})`);
     }
 
     const data = await resp.json();
-    const reply = data.choices[0].message.content;
+    const reply = data.reply;
     messages.push({ role: 'assistant', content: reply });
     removeTyping();
     addMessage('coach', reply);
 
+    // 更新用量
+    usageInfo.remaining = data.remaining;
+    usageInfo.total = data.total;
+    usageInfo.type = data.type;
+    updateUsageDisplay();
+
   } catch (e) {
     removeTyping();
     showError(e.message || '请求失败，请稍后重试');
-    // 保留用户消息在 messages 中，维持对话上下文
   } finally {
     isLoading = false;
     btnSend.disabled = false;
@@ -839,14 +896,101 @@ function startOnboard(topic) {
   step2.innerHTML = (map[topic] || map['迷茫']).map(t => `<button class="btn-followup" onclick="input.value='${t}';autoResize(input);send();hideSuggestions()">${t}</button>`).join('');
   step2.classList.add('show');
 }
-function showError(msg) { errorBanner.textContent = '⚠ ' + msg; errorBanner.classList.add('show'); }
+function showError(msg) {
+  errorBanner.textContent = '⚠ ' + msg;
+  errorBanner.classList.add('show');
+  setTimeout(() => errorBanner.classList.remove('show'), 5000);
+}
 function hideError() { errorBanner.classList.remove('show'); }
 function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+// ── 导出全部卡片 ──
+async function exportAllCards() {
+  try {
+    const resp = await fetch(`${API_BASE}/export?deviceId=${getDeviceId()}`);
+    if (!resp.ok) throw new Error('导出失败');
+    const cards = await resp.json();
+
+    if (!cards.length) {
+      alert('暂无对话记录可导出');
+      return;
+    }
+
+    // 生成一个 .zip 或用逐个下载的方式
+    // 简单方案：合并为一个 .md 文件下载
+    const all = cards.map(c => c.content).join('\n\n---\n\n');
+    const blob = new Blob([all], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reflections-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error('[exportAllCards]', e);
+    alert('导出失败，请重试');
+  }
+}
+
+// ── 进度面板 ──
+async function openProgress() {
+  document.getElementById('progressModal').classList.remove('hidden');
+  renderProgress();
+}
+
+const HABIT_NAMES = {
+  habit1: '习惯一 积极主动',
+  habit2: '习惯二 以终为始',
+  habit3: '习惯三 要事第一',
+  habit4: '习惯四 双赢思维',
+  habit5: '习惯五 知彼解己',
+  habit6: '习惯六 统合综效',
+  habit7: '习惯七 不断更新',
+};
+
+async function renderProgress() {
+  const container = document.getElementById('progressContent');
+  try {
+    const resp = await fetch(`${API_BASE}/progress?deviceId=${getDeviceId()}`);
+    if (!resp.ok) throw new Error('加载失败');
+    const progress = await resp.json();
+
+    if (!progress.total) {
+      container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">暂无数据<br>开始对话后会自动记录</p>';
+      return;
+    }
+
+    const sorted = Object.entries(HABIT_NAMES).map(([k, name]) => ({
+      key: k,
+      name,
+      count: progress[k] || 0,
+    }));
+
+    const maxCount = Math.max(1, ...sorted.map(s => s.count));
+
+    container.innerHTML =
+      `<div style="text-align:center;margin-bottom:12px"><span style="font-size:var(--font-lg);font-weight:700">${progress.total}</span> 次对话</div>` +
+      sorted.map(s => {
+        const pct = Math.round((s.count / maxCount) * 100);
+        const barColor = s.count > 0 ? 'var(--accent)' : '#e0d8c8';
+        return `<div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:var(--font-sm);margin-bottom:2px">
+            <span>${s.name}</span>
+            <span style="font-weight:600;color:${s.count > 0 ? 'var(--accent)' : 'var(--text-muted)'}">${s.count}</span>
+          </div>
+          <div style="height:6px;background:#f0e8d6;border-radius:3px">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.5s"></div>
+          </div>
+        </div>`;
+      }).join('') +
+      '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:16px">七个习惯教练，帮你看见自己的模式</p>';
+  } catch (e) {
+    console.error('[renderProgress]', e);
+    container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">加载失败，请重试</p>';
+  }
+}
 
 init();
 </script>
 </body>
 </html>
-
-
-</style>
