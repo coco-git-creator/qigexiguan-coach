@@ -734,10 +734,13 @@ async function send() {
     addMessage('coach', reply);
 
     // 提取习惯标签并更新本地进度
-    const habitMatch = reply.match(/<!--habit:(\d)-->/);
+    const habitMatch = reply.match(/<!--habit:\s*(\d+)-->/);
     if (habitMatch) {
-      lastHabit = 'habit' + habitMatch[1];
+      const n = Math.min(7, Math.max(1, parseInt(habitMatch[1])));
+      lastHabit = 'habit' + n;
       updateLocalProgress(lastHabit);
+    } else {
+      console.warn('[send] AI 回复未包含习惯标签');
     }
 
   } catch (e) {
@@ -783,7 +786,7 @@ function buildCoachHTML(content) {
   cards.forEach(c => {
     html += `<div class="card-section card-${c.type}">
       <span class="inline-tag">${c.icon} ${c.label}</span>
-      <span class="card-body">${c.text.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}</span>
+      <span class="card-body">${escapeHtml(c.text).replace(/\n/g,"<br>")}</span>
     </div>`;
   });
   // 记录按钮
@@ -847,7 +850,7 @@ function openRecords() {
   renderRecords();
 }
 
-function getMergedRecords() {
+function getLocalRecords() {
   return JSON.parse(localStorage.getItem('coach_records') || '[]');
 }
 
@@ -856,7 +859,7 @@ function renderRecords() {
   const searchQ = (document.getElementById('historySearch')?.value || '').toLowerCase();
   const habitFilter = document.getElementById('historyFilter')?.value || '';
 
-  let records = getMergedRecords();
+  let records = getLocalRecords();
 
   // 搜索过滤
   if (searchQ) {
@@ -875,25 +878,24 @@ function renderRecords() {
     return;
   }
 
-  list.innerHTML = records.map((r, i) => {
+  list.innerHTML = records.map(r => {
     const d = new Date(r.date);
     const ds = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
     const cards = r.cards || [];
-    const sourceTag = r.source === 'cloud' ? ' ☁️' : '';
     const preview = cards.map(c => {
-      const full = (c.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const full = escapeHtml(c.text || '');
       const t = full.replace(/\n/g, ' ').slice(0, 150);
       return `<div style="font-size:var(--font-sm);margin-top:4px;line-height:1.5"><span style="font-weight:700">${c.icon} ${c.label}</span> <span style="color:var(--text-secondary)">${t}${full.length>150?'…':''}</span></div>`;
     }).join('');
-    const fullCards = cards.map(c => `<div style="margin-bottom:8px;line-height:1.6"><div style="font-weight:700;font-size:var(--font-base);margin-bottom:2px">${c.icon} ${c.label}</div><div style="font-size:var(--font-base);color:var(--text);white-space:pre-wrap">${(c.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>`).join('');
-    return `<div class="record-item" style="padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="this.querySelector('.record-full').classList.toggle('show')"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:var(--font-sm);font-weight:600">📅 ${ds}${sourceTag}</span><button onclick="event.stopPropagation();deleteRecord(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px">&times;</button></div>${preview}<div class="record-full" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)">${fullCards}</div></div>`;
+    const fullCards = cards.map(c => `<div style="margin-bottom:8px;line-height:1.6"><div style="font-weight:700;font-size:var(--font-base);margin-bottom:2px">${c.icon} ${c.label}</div><div style="font-size:var(--font-base);color:var(--text);white-space:pre-wrap">${escapeHtml(c.text||'').replace(/\n/g,'<br>')}</div></div>`).join('');
+    return `<div class="record-item" style="padding:12px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="this.querySelector('.record-full').classList.toggle('show')"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:var(--font-sm);font-weight:600">📅 ${ds}</span><button onclick="event.stopPropagation();deleteRecord('${r.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px">&times;</button></div>${preview}<div class="record-full" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)">${fullCards}</div></div>`;
   }).join('');
 }
 
-function deleteRecord(idx) {
+function deleteRecord(id) {
   const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
-  records.splice(idx, 1);
-  localStorage.setItem('coach_records', JSON.stringify(records));
+  const filtered = records.filter(r => r.id !== id);
+  localStorage.setItem('coach_records', JSON.stringify(filtered));
   renderRecords();
 }
 
@@ -901,6 +903,7 @@ function deleteRecord(idx) {
 function saveRecord(btn) {
   const cards = JSON.parse(btn.getAttribute('data-content'));
   const record = {
+    id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     date: new Date().toISOString(),
     cards: cards,
     habit: lastHabit,
@@ -978,7 +981,7 @@ ${(r.cards||[]).map(c => c.text||'').join('\n\n')}
 
 // ── PDF 周报导出 ──
 function exportWeekReport() {
-  const records = getMergedRecords();
+  const records = getLocalRecords();
   if (!records.length) { alert('暂无记录可导出'); return; }
 
   // 筛选本周记录
