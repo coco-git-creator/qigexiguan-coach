@@ -719,7 +719,9 @@ async function send() {
       localStorage.removeItem('coach_ds_key');
       keyModal.classList.remove('hidden');
       keyInput.value = '';
-      throw new Error('API Key 无效，请重新设置');
+      isLoading = false;
+      btnSend.disabled = false;
+      return;
     }
 
     if (!resp.ok) {
@@ -728,13 +730,14 @@ async function send() {
     }
 
     const data = await resp.json();
-    const reply = data.choices[0].message.content;
+    const reply = data.choices?.[0]?.message?.content;
+    if (!reply) throw new Error('AI 返回了空回复，请重试');
     messages.push({ role: 'assistant', content: reply });
     removeTyping();
     addMessage('coach', reply);
 
     // 提取习惯标签并更新本地进度
-    const habitMatch = reply.match(/<!--habit:\s*(\d+)-->/);
+    const habitMatch = reply.match(/<!--\s*habit\s*:\s*(\d+)\s*-->/);
     if (habitMatch) {
       const n = Math.min(7, Math.max(1, parseInt(habitMatch[1])));
       lastHabit = 'habit' + n;
@@ -791,7 +794,7 @@ function buildCoachHTML(content) {
   });
   // 记录按钮
   html += `<div class="record-bar">
-    <button class="btn-record" onclick="saveRecord(this)" data-content="${escapeAttr(JSON.stringify(cards))}">💾 保存反思卡片</button>
+    <button class="btn-record" onclick="saveRecord(this)" data-content="${escapeAttr(JSON.stringify(cards))}" data-habit="${lastHabit}">💾 保存反思卡片</button>
   </div>`;
   // 追问按钮
   html += `<div class="followup-bar">
@@ -851,7 +854,13 @@ function openRecords() {
 }
 
 function getLocalRecords() {
-  return JSON.parse(localStorage.getItem('coach_records') || '[]');
+  try {
+    return JSON.parse(localStorage.getItem('coach_records') || '[]');
+  } catch (e) {
+    console.warn('[getLocalRecords] 数据损坏，已重置');
+    localStorage.removeItem('coach_records');
+    return [];
+  }
 }
 
 function renderRecords() {
@@ -901,20 +910,26 @@ function deleteRecord(id) {
 
 // ── 记录保存 ──
 function saveRecord(btn) {
-  const cards = JSON.parse(btn.getAttribute('data-content'));
-  const record = {
-    id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    date: new Date().toISOString(),
-    cards: cards,
-    habit: lastHabit,
-  };
-  let records = JSON.parse(localStorage.getItem('coach_records') || '[]');
-  records.unshift(record);
-  if (records.length > 20) records = records.slice(0, 20);
-  localStorage.setItem('coach_records', JSON.stringify(records));
-  btn.textContent = '✅ 已保存';
-  btn.classList.add('saved');
-  setTimeout(() => { btn.textContent = '💾 保存反思卡片'; btn.classList.remove('saved'); }, 2000);
+  try {
+    const cards = JSON.parse(btn.getAttribute('data-content'));
+    const record = {
+      id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      date: new Date().toISOString(),
+      cards: cards,
+      habit: btn.getAttribute('data-habit') || 'habit1',
+    };
+    let records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+    records.unshift(record);
+    if (records.length > 50) records = records.slice(0, 50);
+    localStorage.setItem('coach_records', JSON.stringify(records));
+    btn.textContent = '✅ 已保存';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = '💾 保存反思卡片'; btn.classList.remove('saved'); }, 2000);
+  } catch (e) {
+    console.error('[saveRecord]', e);
+    btn.textContent = '⚠ 保存失败';
+    setTimeout(() => { btn.textContent = '💾 保存反思卡片'; btn.classList.remove('saved'); }, 3000);
+  }
 }
 
 // ── 追问 ──
@@ -956,7 +971,7 @@ function exportAllCards() {
   const all = records.map(r => {
     const d = new Date(r.date);
     const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    const habitName = r.habit ? (HABIT_NAMES[r.habit] || r.habit).replace('\n','') : '未分类';
+    const habitName = r.habit ? (HABIT_NAMES[r.habit] || r.habit).replace(/\n/g,'') : '未分类';
     return `---
 date: ${r.date}
 habit: ${r.habit || ''}
@@ -996,11 +1011,12 @@ function exportWeekReport() {
 
   const habitList = Object.entries(habitCounts)
     .sort(([,a], [,b]) => b - a)
-    .map(([k, v]) => `${HABIT_NAMES[k]?.replace('\n','') || k}: ${v}次`)
+    .map(([k, v]) => `${HABIT_NAMES[k]?.replace(/\n/g,'') || k}: ${v}次`)
     .join(' | ') || '暂无';
 
   // 用浏览器打印功能导出 PDF
   const printWin = window.open('', '_blank', 'width=700,height=800');
+  if (!printWin) { alert('弹窗被拦截，请允许本站弹窗后再试'); return; }
   printWin.document.write(`
     <html><head><meta charset="UTF-8"><title>七个习惯教练 · 周报</title>
     <style>
@@ -1040,7 +1056,7 @@ function enableReminder() {
     alert('通知权限已被拒绝，请在浏览器设置中允许通知');
   } else {
     Notification.requestPermission().then(p => {
-      if (p === 'granted') showReminderSettings();
+      if (p === 'granted') { scheduleAllReminders(); showReminderSettings(); }
       else alert('需要允许通知才能设置提醒');
     });
   }
@@ -1237,20 +1253,21 @@ function renderProgress() {
 
     // 找最强和盲区习惯
     let topHabit = HABIT_ORDER[0], blindHabit = HABIT_ORDER[0];
-    let topVal = 0, blindVal = Infinity;
+    let topVal = 0, blindVal = 0;
+    let hasZero = false;
     HABIT_ORDER.forEach(k => {
       const v = data[k];
       if (v > topVal) { topVal = v; topHabit = k; }
-      if (v < blindVal && v === 0) { blindVal = v; blindHabit = k; }
+      if (v === 0) { hasZero = true; blindHabit = k; }
     });
-    // 如果所有习惯都有数据，盲区是最低的那个
-    if (blindVal > 0) {
+    // 如果所有习惯都有数据，盲区是次数最少的那个
+    if (!hasZero) {
       blindVal = Math.min(...Object.values(data));
       blindHabit = HABIT_ORDER.find(k => data[k] === blindVal) || blindHabit;
     }
 
-    const topName = HABIT_NAMES[topHabit].replace('\n','');
-    const blindName = HABIT_NAMES[blindHabit].replace('\n','');
+    const topName = HABIT_NAMES[topHabit].replace(/\n/g,'');
+    const blindName = HABIT_NAMES[blindHabit].replace(/\n/g,'');
 
     container.innerHTML =
       `<div style="text-align:center;margin-bottom:8px">
