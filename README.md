@@ -1,53 +1,43 @@
-# 习惯镜子 · 网页版
+# 七个习惯教练 · 网页版
 
-AI 自我教练对话工具。照见行为模式，看清认知盲区。
+基于《高效能人士的七个习惯》的 AI 自我教练对话工具。独立粉丝作品。
 
-## 用户怎么用
+## 使用方式
 
-1. 打开网页 → 看到欢迎引导
-2. 直接开始对话，无需注册/自带 Key
-3. 免费试用 5 次，之后购买激活码续杯
+1. 打开网页 → 输入 DeepSeek API Key
+2. 开始对话 → AI 教练帮你照见认知盲区
+3. 所有数据存在浏览器本地，不上传
 
-## 架构
+## 获取 API Key
 
-```
-用户浏览器 → GitHub Pages (index.html)
-               ↓ fetch
-            Cloudflare Worker (API 代理)
-               ↓ 转发
-            DeepSeek API
-               ↓ 存储
-            Cloudflare KV (用量/历史/进度/激活码)
-```
+1. 打开 [platform.deepseek.com](https://platform.deepseek.com) → 手机号注册
+2. 进入「API Keys」→ 新建 Key → 复制
+3. 粘贴到网页中即可使用（首次注册有免费额度）
 
 ## 部署
 
-### 前端
+推送到 GitHub Pages：
 
 ```powershell
-cd coach-web
 git add index.html && git commit -m "..." && git push origin gh-pages
-```
-
-### Worker
-
-```powershell
-cd coach-web/worker
-wrangler deploy
 ```
 
 ## 文件结构
 
 ```
-coach-web/
-├── index.html          # 单文件前端
-├── worker/
-│   ├── index.js        # Worker API 代理
-│   └── wrangler.toml   # Worker 配置
+├── index.html          # 单文件前端（全功能）
 ├── DATA_FORMAT.md      # 跨端数据格式规范
 └── README.md
 ```
 
+## 功能
+
+- AI 教练对话（DeepSeek API）
+- 反思卡片保存 / 搜索 / 导出
+- 七维度雷达图进度追踪
+- 浏览器每日提醒
+- PDF 周报导出
+
 ## 版权声明
 
-习惯镜子是独立个人作品，灵感来源于史蒂芬·柯维的著作，与其无关，不隶属于 FranklinCovey 或其关联机构。
+独立粉丝作品，与 FranklinCovey 无关。
