@@ -1,0 +1,23 @@
+{
+  "name": "七个习惯教练 · AI 自我认知镜子",
+  "short_name": "习惯教练",
+  "description": "基于《高效能人士的七个习惯》的AI自我教练。不打卡不积分不排名。",
+  "start_url": "/qigexiguan-coach/",
+  "scope": "/qigexiguan-coach/",
+  "display": "standalone",
+  "background_color": "#f7f3ec",
+  "theme_color": "#b07d33",
+  "icons": [
+    {
+      "src": "/qigexiguan-coach/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/qigexiguan-coach/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

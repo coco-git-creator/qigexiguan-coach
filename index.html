@@ -1,12 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>七个习惯教练 · AI 自我认知镜子</title>
+<link rel="manifest" href="/qigexiguan-coach/manifest.json">
+<meta name="theme-color" content="#b07d33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="习惯教练">
+<link rel="apple-touch-icon" href="/qigexiguan-coach/icon-192.png">
 <!-- 社交分享元标签 -->
 <meta property="og:title" content="七个习惯教练 · AI 自我认知镜子">
 <meta property="og:description" content="基于《高效能人士的七个习惯》的 AI 教练。不打卡、不积分、不排名——帮你看见思维盲区，给你一个今天就能做的小动作。免费使用。">
@@ -86,10 +89,10 @@
   .header-sub { font-size: var(--font-xs); color: var(--text-muted); }
 
   .btn-icon {
-    width: 36px; height: 36px;
+    width: 44px; height: 44px;
     border: 1px solid var(--border-light); border-radius: var(--radius-xs);
     background: var(--card); cursor: pointer;
-    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; display: flex; align-items: center; justify-content: center;
     color: var(--text-muted); transition: all 0.2s;
   }
   .btn-icon:active { background: var(--accent-light); color: var(--text); transform: scale(0.95); }
@@ -159,7 +162,7 @@
   }
   .btn-record {
     background: none; border: 1px solid var(--border-light); border-radius: 16px;
-    padding: 5px 12px; font-size: var(--font-xs); color: var(--text-muted);
+    padding: 8px 14px; font-size: var(--font-sm); color: var(--text-muted);
     cursor: pointer; display: flex; align-items: center; gap: 4px;
     transition: all 0.15s;
   }
@@ -173,7 +176,7 @@
   }
   .btn-followup {
     background: var(--card); border: 1px solid var(--border-light); border-radius: 16px;
-    padding: 6px 12px; font-size: var(--font-xs); color: var(--text-secondary);
+    padding: 8px 14px; font-size: var(--font-sm); color: var(--text-secondary);
     cursor: pointer; transition: all 0.15s; white-space: nowrap;
   }
   .btn-followup:active { background: var(--accent-light); color: var(--text); }
@@ -242,7 +245,7 @@
   }
   .input-area textarea {
     flex: 1; padding: 12px 14px; border: 1px solid var(--border-light);
-    border-radius: var(--radius-sm); font-size: var(--font-base); font-family: inherit;
+    border-radius: var(--radius-sm); font-size: 16px; font-family: inherit;
     resize: none; max-height: 100px; min-height: 44px;
     background: var(--bg); color: var(--text);
     outline: none; transition: border-color 0.2s, box-shadow 0.2s;
@@ -315,7 +318,7 @@
   .modal input {
     width: 100%; padding: 11px 12px; border: 1px solid var(--border-light);
     border-radius: var(--radius-xs); font-size: var(--font-sm); margin-bottom: 6px;
-    outline: none; font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    outline: none; font-size: 16px; font-family: "SF Mono", "Fira Code", "Consolas", monospace;
     background: var(--bg); color: var(--text);
     transition: border-color 0.2s, box-shadow 0.2s;
   }
@@ -393,11 +396,131 @@
   }
   .error-banner.show { display: block; }
 
+/* --- Init Loading Overlay --- */
+.init-loading {
+  position: fixed; inset: 0; z-index: 200;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.3s ease;
+}
+.init-loading.hidden { opacity: 0; pointer-events: none; }
+.init-loading-icon {
+  font-size: 48px; margin-bottom: 16px;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.init-loading-text {
+  font-size: var(--font-sm); color: var(--text-muted);
+}
+
+/* --- PWA Install Banner --- */
+.pwa-banner {
+  position: fixed; bottom: 16px; left: 16px; right: 16px;
+  background: var(--card); border: 1px solid var(--accent-light);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-md); z-index: 90;
+  animation: slideUp 0.35s ease;
+  font-size: var(--font-sm); color: var(--text-secondary);
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.pwa-banner.hidden { display: none; }
+.pwa-banner .pwa-btn {
+  flex-shrink: 0; padding: 6px 14px;
+  background: var(--accent); color: white; border: none;
+  border-radius: 16px; font-size: var(--font-xs); font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.pwa-banner .pwa-close {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 18px; cursor: pointer; padding: 0 2px; flex-shrink: 0;
+}
+
+/* --- Settings Toggle --- */
+.toggle-track {
+  width: 44px; height: 24px; background: var(--border);
+  border-radius: 12px; position: relative; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.toggle-track.on { background: var(--accent); }
+.toggle-thumb {
+  width: 20px; height: 20px; background: white;
+  border-radius: 50%; position: absolute; top: 2px; left: 2px;
+  transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-track.on .toggle-thumb { left: 22px; }
+
+/* --- Mini Bar Chart --- */
+.mini-bar-wrap {
+  display: flex; align-items: flex-end; gap: 6px;
+  justify-content: center; padding: 8px 0; height: 60px;
+}
+.mini-bar-col {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.mini-bar-val { font-size: 0.65rem; color: var(--text-muted); }
+.mini-bar-bar {
+  width: 16px; background: var(--accent); border-radius: 3px 3px 0 0;
+  opacity: 0.7; transition: height 0.4s ease; min-height: 2px;
+}
+.mini-bar-label { font-size: 0.6rem; color: var(--text-muted); }
+
+/* --- Reflection Chain Input --- */
+.chain-input-wrap {
+  margin-top: 10px; padding-top: 8px;
+  border-top: 1px dashed var(--border-light);
+}
+.chain-input-row {
+  display: flex; gap: 6px; margin-top: 6px;
+}
+.chain-input-row input {
+  flex: 1; padding: 6px 10px; border: 1px solid var(--border-light);
+  border-radius: 6px; font-size: var(--font-xs); background: var(--bg);
+  color: var(--text); outline: none; font-family: inherit;
+}
+.chain-input-row button {
+  padding: 6px 10px; border-radius: 6px; font-size: var(--font-xs);
+  border: 1px solid var(--border-light); background: var(--card);
+  color: var(--text-muted); cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.chain-input-row button:active { background: var(--accent-light); color: var(--text); }
+.chain-input-row button.chain-save { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* --- 小屏适配 (< 360px) --- */
+@media (max-width: 359px) {
+  .header { padding: 10px 12px; }
+  .header h1 { font-size: 15px; }
+  .header-icon { width: 36px; height: 36px; font-size: 18px; }
+  .btn-icon { width: 38px; height: 38px; font-size: 16px; }
+  .chat { padding: 14px 10px; gap: 14px; }
+  .message { max-width: 92%; }
+  .input-area { padding: 8px 10px; gap: 6px; }
+  .btn-send { width: 40px; height: 40px; }
+  .onboarding { padding: 0 10px 10px; }
+  .modal { padding: 24px 18px 18px; }
+}
+
 </style>
 </head>
 <body>
 
+<div class="init-loading" id="initLoading">
+  <div class="init-loading-icon">🪞</div>
+  <div class="init-loading-text">正在加载...</div>
+</div>
+
 <div class="error-banner" id="errorBanner"></div>
+
+<div class="pwa-banner hidden" id="pwaBanner">
+  <span>📲 添加到主屏幕，随时照镜子</span>
+  <button class="pwa-btn" id="pwaInstallBtn">安装</button>
+  <button class="pwa-close" id="pwaClose">&times;</button>
+</div>
 
 <!-- ====== Key Setup Modal ====== -->
 <div class="modal-overlay" id="keyModal">
@@ -451,7 +574,7 @@
         <option value="habit3">习惯三 要事第一</option>
         <option value="habit4">习惯四 双赢思维</option>
         <option value="habit5">习惯五 知彼解己</option>
-        <option value="habit6">习惯六 协同共创</option>
+        <option value="habit6">习惯六 统合综效</option>
         <option value="habit7">习惯七 不断更新</option>
       </select>
     </div>
@@ -478,6 +601,30 @@
   </div>
 </div>
 
+<!-- ====== Settings Modal ====== -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal" style="max-width:400px">
+    <h2>⚙️ 设置</h2>
+    <div style="margin:16px 0">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-light)">
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:var(--font-sm)">🪢 反思链</div>
+          <div style="font-size:var(--font-xs);color:var(--text-secondary);margin-top:4px;line-height:1.5">每次对话后保存一句话摘要。下次对话时教练会自然提及，帮你连接思考。<br><br>🔒 摘要保存在你的设备上，只在对话时发送一句话给 AI（不含完整对话内容）。</div>
+        </div>
+        <label class="toggle-track" id="reflectionChainToggle" style="flex-shrink:0;margin-left:12px">
+          <input type="checkbox" id="reflectionChainCheck" style="opacity:0;position:absolute;pointer-events:none" onchange="toggleReflectionChain()">
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <div style="padding:12px 0;border-bottom:1px solid var(--border-light)">
+        <div style="font-size:var(--font-sm);color:var(--text-secondary)">💾 存储方式：<span id="storageInfo">--</span></div>
+        <div style="font-size:var(--font-xs);color:var(--text-muted);margin-top:2px">已存记录：<span id="storageCount">--</span></div>
+      </div>
+    </div>
+    <button class="btn-primary" id="btnCloseSettings">完成</button>
+  </div>
+</div>
+
 <!-- ====== Main App ====== -->
 <header class="header">
   <div class="header-left">
@@ -491,6 +638,7 @@
     <button class="btn-icon" id="btnRemind" title="每日提醒">⏰</button>
     <button class="btn-icon" id="btnProgress" title="我的进展">📊</button>
     <button class="btn-icon" id="btnRecords" title="我的记录">📋</button>
+    <button class="btn-icon" id="btnSettings" title="设置">⚙️</button>
     <button class="btn-icon" id="btnReset" title="新对话">🔄</button>
   </div>
 </header>
@@ -527,12 +675,130 @@
 <div class="disclaimer">⚠️ 独立粉丝作品 · 与 FranklinCovey 无关 · 遇到严重心理困扰请寻求专业支持</div>
 
 <script>
+// ══════════════════════════════════════════════════════════════════
+// Storage Adapter — OPFS 优先 + localStorage 双写备份
+// ══════════════════════════════════════════════════════════════════
+const Storage = (() => {
+  let _backend = null;       // 'opfs' | 'localStorage'
+  let _root = null;          // OPFS directory handle
+  const MIGRATED_KEY = 'coach_opfs_migrated_ts';
+
+  const isOPFSAvailable = async () => {
+    try {
+      await navigator.storage.getDirectory();
+      return true;
+    } catch { return false; }
+  };
+
+  const getDirect = async (key) => {
+    try {
+      const fileHandle = await _root.getFileHandle(key);
+      const file = await fileHandle.getFile();
+      return await file.text();
+    } catch (e) {
+      if (e.name === 'NotFoundError') return null;
+      throw e;
+    }
+  };
+
+  const setDirect = async (key, value) => {
+    const fileHandle = await _root.getFileHandle(key, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(value);
+    await writable.close();
+  };
+
+  const migrateFromLocalStorage = async () => {
+    const keys = ['coach_ds_key', 'coach_records', 'coach_progress', 'coach_reminders', 'coach_reflection_chain'];
+    let count = 0;
+    for (const k of keys) {
+      const val = localStorage.getItem(k);
+      if (val !== null) {
+        try { await setDirect(k, val); count++; } catch (e) { console.error('[Storage.migrate]', k, e); }
+      }
+    }
+    localStorage.setItem(MIGRATED_KEY, Date.now().toString());
+    console.log('[Storage] migrated', count, 'keys to OPFS');
+  };
+
+  const init = async () => {
+    try {
+      if (await isOPFSAvailable()) {
+        _root = await navigator.storage.getDirectory();
+        _backend = 'opfs';
+        if (!localStorage.getItem(MIGRATED_KEY)) {
+          await migrateFromLocalStorage();
+        }
+        // 检查 OPFS 是否为空但 localStorage 有数据（Safari 驱逐后恢复）
+        const lsKeys = ['coach_ds_key', 'coach_records', 'coach_progress', 'coach_reminders'];
+        let opfsEmpty = true;
+        for (const k of lsKeys) {
+          try { await _root.getFileHandle(k); opfsEmpty = false; break; } catch {}
+        }
+        if (opfsEmpty) {
+          // OPFS 被清空了（Safari 驱逐/用户清缓存），从 localStorage 恢复
+          let restored = 0;
+          for (const k of lsKeys) {
+            const val = localStorage.getItem(k);
+            if (val !== null) {
+              try { await setDirect(k, val); restored++; } catch {}
+            }
+          }
+          if (restored > 0) console.log('[Storage] restored', restored, 'keys from localStorage backup');
+        }
+      } else {
+        _backend = 'localStorage';
+        console.log('[Storage] OPFS unavailable, using localStorage');
+      }
+    } catch (e) {
+      console.error('[Storage.init]', e);
+      _backend = 'localStorage';
+    }
+    // 申请持久化（非阻塞）
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then(granted => {
+        console.log('[Storage] persist granted:', granted);
+      }).catch(() => {});
+    }
+  };
+
+  const get = async (key) => {
+    if (_backend === 'opfs') {
+      try { const v = await getDirect(key); if (v !== null) return v; }
+      catch (e) { console.error('[Storage.get] OPFS fail, fallback', e); }
+    }
+    return localStorage.getItem(key);
+  };
+
+  const set = async (key, value) => {
+    if (_backend === 'opfs') {
+      try { await setDirect(key, value); }
+      catch (e) { console.error('[Storage.set] OPFS fail', e); }
+    }
+    // 始终双写到 localStorage（防 Safari 驱逐 + 无痕模式）
+    try { localStorage.setItem(key, value); } catch (e) { console.error('[Storage.set] localStorage fallback', e); }
+  };
+
+  const remove = async (key) => {
+    if (_backend === 'opfs') {
+      try { await _root.removeEntry(key); } catch (e) { /* NotFoundError ok */ }
+    }
+    localStorage.removeItem(key);
+  };
+
+  const getBackend = () => _backend;
+  const getRecordLimit = () => (_backend === 'opfs') ? 500 : 50;
+
+  return { init, get, set, remove, getBackend, getRecordLimit };
+})();
+
 // ── State ──
 const DEEPSEEK_API = 'https://api.deepseek.com/chat/completions';
-let apiKey = localStorage.getItem('coach_ds_key') || '';
+let apiKey = '';  // 异步初始化，由 init() 设置
 let messages = [];
 let isLoading = false;
 let lastHabit = 'habit1';
+let deferredPrompt = null;  // PWA install prompt
 
 const SYSTEM_PROMPT = `你是基于《高效能人士的七个习惯》的自我成长教练。核心理念：认知镜子，而非任务管家——帮助用户"看见"自己的思维模式和行为盲区，不是管理待办事项。这是一个独立粉丝作品，与 FranklinCovey 无关。
 
@@ -550,7 +816,7 @@ const SYSTEM_PROMPT = `你是基于《高效能人士的七个习惯》的自我
 - 习惯三 要事第一：四象限（重要/紧急）。大石头先放。周计划>日计划。第二象限是关键
 - 习惯四 双赢思维：不是你的方式或我的方式，而是更好的方式。富足心态vs匮乏心态。情感账户
 - 习惯五 知彼解己：先诊断再开处方。同理心倾听。避免自传式回应
-- 习惯六 协同共创：1+1>2。重视差异。第三选择——不是妥协而是创造
+- 习惯六 统合综效：1+1>2。重视差异。第三选择——不是妥协而是创造
 - 习惯七 不断更新：身体/精神/智力/社会情感四个维度。螺旋上升。磨刀不误砍柴工
 
 ## 关键概念
@@ -600,7 +866,7 @@ const keyInput = document.getElementById('keyInput');
 const keyError = document.getElementById('keyError');
 
 // ── Key Management ──
-function saveKey() {
+async function saveKey() {
   const val = keyInput.value.trim();
   if (!val.startsWith('sk-') || val.length < 20) {
     keyError.classList.add('show');
@@ -608,7 +874,7 @@ function saveKey() {
   }
   keyError.classList.remove('show');
   apiKey = val;
-  localStorage.setItem('coach_ds_key', apiKey);
+  await Storage.set('coach_ds_key', apiKey);
   keyModal.classList.add('hidden');
   btnSend.style.opacity = '';
   input.focus();
@@ -620,7 +886,48 @@ function skipKey() {
 }
 
 // ── Init ──
-function init() {
+async function init() {
+  try {
+    await Storage.init();
+  } catch (e) {
+    console.error('[init] Storage.init failed:', e);
+  }
+  apiKey = (await Storage.get('coach_ds_key')) || '';
+
+  // 注册 Service Worker（PWA）
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/qigexiguan-coach/sw.js')
+      .then(reg => console.log('[SW] registered, scope:', reg.scope))
+      .catch(e => console.error('[SW] registration failed:', e));
+  }
+
+  // PWA 安装提示
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!localStorage.getItem('coach_pwa_banner_dismissed')) {
+      document.getElementById('pwaBanner').classList.remove('hidden');
+    }
+  });
+  document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      console.log('[PWA] install result:', result.outcome);
+      deferredPrompt = null;
+    }
+    document.getElementById('pwaBanner').classList.add('hidden');
+  });
+  document.getElementById('pwaClose').addEventListener('click', () => {
+    document.getElementById('pwaBanner').classList.add('hidden');
+    localStorage.setItem('coach_pwa_banner_dismissed', '1');
+  });
+
+  // 隐藏 loading 遮罩
+  const loading = document.getElementById('initLoading');
+  loading.classList.add('hidden');
+  setTimeout(() => { if (loading.parentNode) loading.remove(); }, 350);
+
   // 没有 Key 则显示设置弹窗
   if (!apiKey) {
     keyModal.classList.remove('hidden');
@@ -649,9 +956,9 @@ function init() {
   document.getElementById('btnCloseRecords').addEventListener('click', () => {
     document.getElementById('recordsModal').classList.add('hidden');
   });
-  document.getElementById('btnClearRecords').addEventListener('click', () => {
+  document.getElementById('btnClearRecords').addEventListener('click', async () => {
     if (confirm('确定清空全部记录？')) {
-      localStorage.removeItem('coach_records');
+      await Storage.remove('coach_records');
       renderRecords();
     }
   });
@@ -666,6 +973,12 @@ function init() {
   document.getElementById('btnCloseProgress').addEventListener('click', () => {
     document.getElementById('progressModal').classList.add('hidden');
   });
+
+  // 设置面板
+  document.getElementById('btnSettings').addEventListener('click', openSettings);
+  document.getElementById('btnCloseSettings').addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.add('hidden');
+  });
 }
 
 function autoResize(el) {
@@ -674,12 +987,39 @@ function autoResize(el) {
 }
 
 // ── Chat ──
-function updateLocalProgress(habit) {
-  const raw = localStorage.getItem('coach_progress') || '{"habit1":0,"habit2":0,"habit3":0,"habit4":0,"habit5":0,"habit6":0,"habit7":0,"total":0}';
-  const progress = JSON.parse(raw);
-  progress[habit] = (progress[habit] || 0) + 1;
-  progress.total = (progress.total || 0) + 1;
-  localStorage.setItem('coach_progress', JSON.stringify(progress));
+async function updateLocalProgress(habit) {
+  try {
+    const raw = (await Storage.get('coach_progress')) || '{"habit1":0,"habit2":0,"habit3":0,"habit4":0,"habit5":0,"habit6":0,"habit7":0,"total":0}';
+    const progress = JSON.parse(raw);
+    progress[habit] = (progress[habit] || 0) + 1;
+    progress.total = (progress.total || 0) + 1;
+    await Storage.set('coach_progress', JSON.stringify(progress));
+  } catch (e) {
+    console.error('[updateLocalProgress]', e);
+  }
+}
+
+// ── 渐进式教练深度 ──
+function getCoachStageDirective(habit) {
+  try {
+    // 从 localStorage 同步读取（此函数在 send() 中 await Storage.get 之前调用，用同步方式读缓存）
+    // 实际上 coach_progress 数据在 send() 中已通过 updateLocalProgress 异步更新，
+    // 这里用 localStorage 快照读取上次的状态
+    const raw = localStorage.getItem('coach_progress') || '{}';
+    const progress = JSON.parse(raw);
+    const count = progress[habit] || 0;
+
+    if (count <= 2) {
+      return '\n\n## 当前教练阶段\n引导探索。用户刚开始探索这个习惯。多用温和的提问帮用户把模糊的感受说清楚。少给结论，多给问题。像帮朋友理清一团乱麻。';
+    } else if (count <= 5) {
+      return '\n\n## 当前教练阶段\n深度照镜子。用户已有一定认知基础。可以开始帮用户看见重复的模式，连接不同场景的相似行为。用"我注意到一个模式"的句式。把你注意到但用户可能没意识到的联系说出来。';
+    } else {
+      return '\n\n## 当前教练阶段\n挑战追问。用户对这个习惯已经比较熟悉。温柔但坚定地挑战用户的假设和借口。问"如果这不是真的，还有什么可能？"。用户准备好接受更尖锐的镜子了。';
+    }
+  } catch (e) {
+    console.error('[getCoachStageDirective]', e);
+    return '';
+  }
 }
 
 async function send() {
@@ -708,12 +1048,23 @@ async function send() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
 
+    const stageDirective = getCoachStageDirective(lastHabit);
+    let effectiveSystemPrompt = SYSTEM_PROMPT + stageDirective;
+
+    // 反思链上下文注入
+    if (isReflectionChainEnabled()) {
+      const chain = getReflectionChain();
+      if (chain.lastSummary) {
+        effectiveSystemPrompt += `\n\n## 上次对话上下文\n用户上次提到：${chain.lastSummary}\n请在合适的时机自然提及这个上下文，帮助用户连接前后的思考。不要生硬地复述——像自然想起的。如果当前话题和上次无关，不需要强行关联。`;
+      }
+    }
+
     const resp = await fetch(DEEPSEEK_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: 'system', content: effectiveSystemPrompt }, ...messages],
         temperature: 0.7,
         max_tokens: 1500,
       }),
@@ -724,7 +1075,7 @@ async function send() {
     if (resp.status === 401) {
       removeTyping();
       apiKey = '';
-      localStorage.removeItem('coach_ds_key');
+      await Storage.remove('coach_ds_key');
       keyModal.classList.remove('hidden');
       keyInput.value = '';
       isLoading = false;
@@ -749,9 +1100,20 @@ async function send() {
     if (habitMatch) {
       const n = Math.min(7, Math.max(1, parseInt(habitMatch[1])));
       lastHabit = 'habit' + n;
-      updateLocalProgress(lastHabit);
+      updateLocalProgress(lastHabit).catch(() => {});
     } else {
-      console.warn('[send] AI 回复未包含习惯标签');
+      // 兜底：关键词匹配
+      const kw = {
+        habit1: /积极主动|主动语言|影响圈|刺激.*回应/,
+        habit2: /以终为始|使命宣言|葬礼想象|脑中.*现实/,
+        habit3: /要事第一|四象限|重要.*紧急|大石头|第二象限/,
+        habit4: /双赢|输赢|富足心态|情感账户/,
+        habit5: /知彼解己|同理心|倾听|自传式/,
+        habit6: /统合综效|第三选择|重视差异/,
+        habit7: /不断更新|磨刀|身.*精神|螺旋上升/ };
+      for (const [k, re] of Object.entries(kw)) {
+        if (re.test(reply)) { lastHabit = k; updateLocalProgress(k).catch(() => {}); break; }
+      }
     }
 
   } catch (e) {
@@ -791,7 +1153,7 @@ function buildCoachHTML(content) {
   const cards = parseCards(content);
   if (cards.length === 1 && cards[0].type === 'plain') {
     const compact = content.replace(/\n{3,}/g, '\n\n').trim();
-    return `<div class="bubble">${DOMPurify.sanitize(marked.parse(compact))}</div>`;
+    return `<div class="bubble">${DOMPurify.sanitize(marked.parse(compact))}</div>${buildChainInputHTML()}`;
   }
   let html = '<div class="bubble">';
   cards.forEach(c => {
@@ -810,6 +1172,8 @@ function buildCoachHTML(content) {
     <button class="btn-followup" onclick="followup(this)">我还是觉得很难开始</button>
     <button class="btn-followup" onclick="followup(this)">换个角度帮我看看</button>
   </div>`;
+  // 反思链输入（仅在开启时显示）
+  html += buildChainInputHTML();
   html += '</div>';
   return html;
 }
@@ -861,22 +1225,22 @@ function openRecords() {
   renderRecords();
 }
 
-function getLocalRecords() {
+async function getLocalRecords() {
   try {
-    return JSON.parse(localStorage.getItem('coach_records') || '[]');
+    return JSON.parse((await Storage.get('coach_records')) || '[]');
   } catch (e) {
     console.warn('[getLocalRecords] 数据损坏，已重置');
-    localStorage.removeItem('coach_records');
+    await Storage.remove('coach_records');
     return [];
   }
 }
 
-function renderRecords() {
+async function renderRecords() {
   const list = document.getElementById('recordsList');
   const searchQ = (document.getElementById('historySearch')?.value || '').toLowerCase();
   const habitFilter = document.getElementById('historyFilter')?.value || '';
 
-  let records = getLocalRecords();
+  let records = await getLocalRecords();
 
   // 搜索过滤
   if (searchQ) {
@@ -909,15 +1273,19 @@ function renderRecords() {
   }).join('');
 }
 
-function deleteRecord(id) {
-  const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
-  const filtered = records.filter(r => r.id !== id);
-  localStorage.setItem('coach_records', JSON.stringify(filtered));
+async function deleteRecord(id) {
+  try {
+    const records = JSON.parse((await Storage.get('coach_records')) || '[]');
+    const filtered = records.filter(r => r.id !== id);
+    await Storage.set('coach_records', JSON.stringify(filtered));
+  } catch (e) {
+    console.error('[deleteRecord]', e);
+  }
   renderRecords();
 }
 
 // ── 记录保存 ──
-function saveRecord(btn) {
+async function saveRecord(btn) {
   try {
     const cards = JSON.parse(btn.getAttribute('data-content'));
     const record = {
@@ -926,10 +1294,11 @@ function saveRecord(btn) {
       cards: cards,
       habit: btn.getAttribute('data-habit') || 'habit1',
     };
-    let records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+    let records = JSON.parse((await Storage.get('coach_records')) || '[]');
     records.unshift(record);
-    if (records.length > 50) records = records.slice(0, 50);
-    localStorage.setItem('coach_records', JSON.stringify(records));
+    const limit = Storage.getRecordLimit();
+    if (records.length > limit) records = records.slice(0, limit);
+    await Storage.set('coach_records', JSON.stringify(records));
     btn.textContent = '✅ 已保存';
     btn.classList.add('saved');
     setTimeout(() => { btn.textContent = '💾 保存反思卡片'; btn.classList.remove('saved'); }, 2000);
@@ -969,8 +1338,8 @@ function hideError() { errorBanner.classList.remove('show'); }
 function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
 // ── 导出全部卡片 ──
-function exportAllCards() {
-  const records = JSON.parse(localStorage.getItem('coach_records') || '[]');
+async function exportAllCards() {
+  const records = JSON.parse((await Storage.get('coach_records')) || '[]');
   if (!records.length) {
     alert('暂无记录可导出');
     return;
@@ -1003,8 +1372,8 @@ ${(r.cards||[]).map(c => c.text||'').join('\n\n')}
 }
 
 // ── PDF 周报导出 ──
-function exportWeekReport() {
-  const records = getLocalRecords();
+async function exportWeekReport() {
+  const records = await getLocalRecords();
   if (!records.length) { alert('暂无记录可导出'); return; }
 
   // 筛选本周记录
@@ -1035,7 +1404,8 @@ function exportWeekReport() {
       .label { font-weight:700; font-size:14px; color:#b07d33; }
       .text { font-size:14px; line-height:1.7; white-space:pre-wrap; margin-top:4px; }
       .summary { background:#f9f3e7; border-radius:8px; padding:14px; margin:20px 0; }
-    </style></head><body>
+    
+</style></head><body>
     <h1>🪞 七个习惯教练 · 周报</h1>
     <div class="meta">${weekAgo.toLocaleDateString()} — ${now.toLocaleDateString()} · 共 ${weekRecords.length} 次对话</div>
     <div class="summary"><strong>本周习惯分布：</strong>${habitList}</div>
@@ -1070,11 +1440,10 @@ function enableReminder() {
   }
 }
 
-function showReminderSettings() {
-  const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+async function showReminderSettings() {
+  const reminders = JSON.parse((await Storage.get('coach_reminders')) || '[]');
   // 默认模板
   const defaultMsg = '今天有什么想照一照镜子的？花 5 分钟聊聊吧。';
-  const lastMsg = reminders.length > 0 ? reminders[reminders.length-1].message : defaultMsg;
 
   let html = `<div style="text-align:left">
     <p style="font-size:var(--font-sm);color:var(--text-secondary);margin-bottom:12px">⏰ 设置每日反思提醒，帮你保持觉察</p>`;
@@ -1093,7 +1462,7 @@ function showReminderSettings() {
   html += `
     <div style="display:flex;gap:8px;margin-top:12px">
       <input type="time" id="remindTime" value="20:00" style="padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text);width:110px">
-      <input type="text" id="remindMsg" placeholder="自定义提醒文字..." value="${escapeHtml(lastMsg)}" style="flex:1;padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text)">
+      <input type="text" id="remindMsg" placeholder="${escapeHtml(defaultMsg)}" style="flex:1;padding:8px;border:1px solid var(--border-light);border-radius:6px;font-size:var(--font-sm);background:var(--bg);color:var(--text)">
     </div>
     <button id="btnAddReminder" style="width:100%;margin-top:8px;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:var(--font-sm);font-weight:600;cursor:pointer">+ 添加提醒</button>
   </div>`;
@@ -1110,13 +1479,13 @@ function showReminderSettings() {
 
   const close = () => { modal.classList.add('hidden'); setTimeout(() => modal.remove(), 300); };
   modal.querySelector('#btnCloseReminder').addEventListener('click', close);
-  modal.querySelector('#btnAddReminder').addEventListener('click', () => {
+  modal.querySelector('#btnAddReminder').addEventListener('click', async () => {
     const time = modal.querySelector('#remindTime').value;
     const msg = modal.querySelector('#remindMsg').value.trim();
     if (!time) return;
-    const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+    const reminders = JSON.parse((await Storage.get('coach_reminders')) || '[]');
     reminders.push({ time, message: msg || defaultMsg });
-    localStorage.setItem('coach_reminders', JSON.stringify(reminders));
+    await Storage.set('coach_reminders', JSON.stringify(reminders));
     close();
     scheduleAllReminders();
     showError(`✅ 提醒已添加`);
@@ -1124,10 +1493,14 @@ function showReminderSettings() {
   modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
 }
 
-function deleteReminder(index) {
-  const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
-  reminders.splice(index, 1);
-  localStorage.setItem('coach_reminders', JSON.stringify(reminders));
+async function deleteReminder(index) {
+  try {
+    const reminders = JSON.parse((await Storage.get('coach_reminders')) || '[]');
+    reminders.splice(index, 1);
+    await Storage.set('coach_reminders', JSON.stringify(reminders));
+  } catch (e) {
+    console.error('[deleteReminder]', e);
+  }
   scheduleAllReminders();
   // 刷新弹窗
   document.querySelector('.modal-overlay')?.remove();
@@ -1135,10 +1508,16 @@ function deleteReminder(index) {
 }
 
 let reminderTimers = [];
-function scheduleAllReminders() {
+async function scheduleAllReminders() {
   reminderTimers.forEach(clearTimeout);
   reminderTimers = [];
-  const reminders = JSON.parse(localStorage.getItem('coach_reminders') || '[]');
+  let reminders = [];
+  try {
+    reminders = JSON.parse((await Storage.get('coach_reminders')) || '[]');
+  } catch (e) {
+    console.error('[scheduleAllReminders] parse error:', e);
+    return;
+  }
   reminders.forEach(r => {
     const [hh, mm] = r.time.split(':').map(Number);
     const now = new Date();
@@ -1149,14 +1528,14 @@ function scheduleAllReminders() {
     const timer = setTimeout(() => {
       new Notification('🪞 七个习惯教练', { body: r.message });
       // 重新安排
-      scheduleAllReminders();
+      scheduleAllReminders().catch(e => console.error('[reminder] reschedule failed:', e));
     }, delay);
     reminderTimers.push(timer);
   });
 }
 
-// 页面加载时安排已有提醒
-if (Notification.permission === 'granted') scheduleAllReminders();
+// 页面加载时安排已有提醒（async IIFE）
+if (Notification.permission === 'granted') { scheduleAllReminders().catch(e => console.error('[init] scheduleAllReminders:', e)); }
 async function openProgress() {
   document.getElementById('progressModal').classList.remove('hidden');
   renderProgress();
@@ -1168,21 +1547,117 @@ const HABIT_NAMES = {
   habit3: '习惯三\n要事第一',
   habit4: '习惯四\n双赢思维',
   habit5: '习惯五\n知彼解己',
-  habit6: '习惯六\n协同共创',
+  habit6: '习惯六\n统合综效',
   habit7: '习惯七\n不断更新',
 };
 
 const HABIT_SHORT = {
-  habit1: '主动',
-  habit2: '终始',
-  habit3: '要事',
-  habit4: '双赢',
-  habit5: '知彼',
-  habit6: '统效',
-  habit7: '更新',
+  habit1: '积极主动',
+  habit2: '以终为始',
+  habit3: '要事第一',
+  habit4: '双赢思维',
+  habit5: '知彼解己',
+  habit6: '统合综效',
+  habit7: '不断更新',
 };
 
 const HABIT_ORDER = ['habit1','habit2','habit3','habit4','habit5','habit6','habit7'];
+
+// ── 本地统计计算（纯本地，不发数据给 AI）──
+function computeStreak(records) {
+  const dates = new Set();
+  records.forEach(r => {
+    const d = new Date(r.date);
+    if (!isNaN(d.getTime())) dates.add(d.toISOString().slice(0, 10));
+  });
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const key = d.toISOString().slice(0, 10);
+    if (dates.has(key)) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+function computeTimePattern(records) {
+  const buckets = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+  records.forEach(r => {
+    const h = new Date(r.date).getHours();
+    if (isNaN(h)) return;
+    if (h >= 6 && h < 12) buckets.morning++;
+    else if (h >= 12 && h < 18) buckets.afternoon++;
+    else if (h >= 18 && h < 24) buckets.evening++;
+    else buckets.night++;
+  });
+  const labels = { morning: '上午', afternoon: '下午', evening: '晚间', night: '深夜' };
+  const max = Object.entries(buckets).reduce((a, b) => (a[1] >= b[1] ? a : b), ['morning', 0]);
+  return { label: labels[max[0]], key: max[0], ...buckets };
+}
+
+function computeWeeklyTrend(records) {
+  const weeks = {};
+  records.forEach(r => {
+    const d = new Date(r.date);
+    if (isNaN(d.getTime())) return;
+    const sun = new Date(d);
+    sun.setDate(d.getDate() - d.getDay());
+    const key = sun.toISOString().slice(0, 10);
+    weeks[key] = (weeks[key] || 0) + 1;
+  });
+  return Object.entries(weeks).sort(([a], [b]) => a.localeCompare(b)).slice(-8);
+}
+
+function computeDistributionChange(records) {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 86400000);
+
+  const recent = {}, previous = {};
+  records.forEach(r => {
+    const d = new Date(r.date);
+    if (isNaN(d.getTime())) return;
+    const h = r.habit || 'habit1';
+    if (d >= thirtyDaysAgo) {
+      recent[h] = (recent[h] || 0) + 1;
+    } else if (d >= sixtyDaysAgo) {
+      previous[h] = (previous[h] || 0) + 1;
+    }
+  });
+
+  // 找变化最大的习惯
+  let maxChange = 0, maxHabit = null, maxDir = '';
+  HABIT_ORDER.forEach(k => {
+    const r = recent[k] || 0;
+    const p = previous[k] || 0;
+    if (r > 0 && p > 0) {
+      const change = Math.abs(r - p);
+      if (change > maxChange) {
+        maxChange = change;
+        maxHabit = k;
+        maxDir = r > p ? 'increased' : 'decreased';
+      }
+    }
+  });
+  return { recent, previous, maxHabit, maxDir, maxChange };
+}
+
+function renderMiniBarChart(weeklyData) {
+  if (!weeklyData || weeklyData.length === 0) {
+    return '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center">数据不足，多聊几次后会显示趋势</p>';
+  }
+  const maxVal = Math.max(...weeklyData.map(([, v]) => v), 1);
+  const bars = weeklyData.map(([week, count]) => {
+    const height = Math.max(3, (count / maxVal) * 40);
+    const dateLabel = week.slice(5); // MM-DD
+    return `<div class="mini-bar-col">
+      <span class="mini-bar-val">${count}</span>
+      <div class="mini-bar-bar" style="height:${height}px"></div>
+      <span class="mini-bar-label">${dateLabel}</span>
+    </div>`;
+  }).join('');
+  return `<div class="mini-bar-wrap">${bars}</div>`;
+}
 
 function buildRadarSVG(data) {
   const cx = 140, cy = 140, r = 100;
@@ -1245,10 +1720,10 @@ function buildRadarSVG(data) {
   </svg>`;
 }
 
-function renderProgress() {
+async function renderProgress() {
   const container = document.getElementById('progressContent');
   try {
-    const raw = localStorage.getItem('coach_progress') || '{"habit1":0,"habit2":0,"habit3":0,"habit4":0,"habit5":0,"habit6":0,"habit7":0,"total":0}';
+    const raw = (await Storage.get('coach_progress')) || '{"habit1":0,"habit2":0,"habit3":0,"habit4":0,"habit5":0,"habit6":0,"habit7":0,"total":0}';
     const progress = JSON.parse(raw);
 
     if (!progress.total) {
@@ -1260,29 +1735,61 @@ function renderProgress() {
     HABIT_ORDER.forEach(k => { data[k] = progress[k] || 0; });
 
     // 找最强和盲区习惯
-    let topHabit = HABIT_ORDER[0], blindHabit = HABIT_ORDER[0];
-    let topVal = 0, blindVal = 0;
+    let topHabit = HABIT_ORDER[0], topVal = 0;
+    const blindHabits = [];
     let hasZero = false;
     HABIT_ORDER.forEach(k => {
       const v = data[k];
       if (v > topVal) { topVal = v; topHabit = k; }
-      if (v === 0) { hasZero = true; blindHabit = k; }
+      if (v === 0) { hasZero = true; blindHabits.push(k); }
     });
     // 如果所有习惯都有数据，盲区是次数最少的那个
     if (!hasZero) {
-      blindVal = Math.min(...Object.values(data));
-      blindHabit = HABIT_ORDER.find(k => data[k] === blindVal) || blindHabit;
+      const blindVal = Math.min(...Object.values(data));
+      const k = HABIT_ORDER.find(k => data[k] === blindVal);
+      if (k) blindHabits.push(k);
     }
 
     const topName = HABIT_NAMES[topHabit].replace(/\n/g,'');
-    const blindName = HABIT_NAMES[blindHabit].replace(/\n/g,'');
+    const blindNames = blindHabits.length > 0 ? blindHabits.map(k => HABIT_NAMES[k].replace(/\n/g,'')).join('、') : '暂无';
+
+    // 读取记录数据用于统计
+    let records = [];
+    try { records = JSON.parse((await Storage.get('coach_records')) || '[]'); } catch {}
+
+    // 计算各项统计
+    const streak = computeStreak(records);
+    const timePattern = computeTimePattern(records);
+    const weeklyTrend = computeWeeklyTrend(records);
+    const distChange = computeDistributionChange(records);
+
+    // 分布变化文案
+    let distChangeHTML = '';
+    if (distChange.maxHabit) {
+      const name = HABIT_SHORT[distChange.maxHabit];
+      const dir = distChange.maxDir === 'increased' ? '增加' : '减少';
+      distChangeHTML = `<div style="font-size:var(--font-xs);color:var(--text-secondary);text-align:center;margin-top:8px">📊 近30天，「${name}」对话${dir}了 ${distChange.maxChange} 次</div>`;
+    }
 
     container.innerHTML =
-      `<div style="text-align:center;margin-bottom:8px">
-        <span style="font-size:var(--font-xl);font-weight:700;color:var(--accent)">${progress.total}</span>
-        <span style="font-size:var(--font-sm);color:var(--text-secondary)"> 次对话</span>
+      // 顶部摘要行
+      `<div style="display:flex;justify-content:center;gap:24px;margin-bottom:12px;text-align:center">
+        <div>
+          <div style="font-size:var(--font-xl);font-weight:700;color:var(--accent)">${progress.total}</div>
+          <div style="font-size:0.65rem;color:var(--text-muted)">次对话</div>
+        </div>
+        <div>
+          <div style="font-size:var(--font-xl);font-weight:700;color:var(--accent)">${streak}</div>
+          <div style="font-size:0.65rem;color:var(--text-muted)">连续天数 🔥</div>
+        </div>
+        <div>
+          <div style="font-size:var(--font-lg);font-weight:600;color:var(--text-secondary)">${timePattern.label}</div>
+          <div style="font-size:0.65rem;color:var(--text-muted)">常用时段</div>
+        </div>
       </div>` +
+      // 雷达图
       buildRadarSVG(data) +
+      // 两个信息卡片
       `<div style="display:flex;gap:10px;margin-top:12px">
         <div style="flex:1;background:var(--accent-pale);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:var(--font-xs);color:var(--text-muted)">最常照见</div>
@@ -1290,14 +1797,106 @@ function renderProgress() {
         </div>
         <div style="flex:1;background:#faf8f4;border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:var(--font-xs);color:var(--text-muted)">认知盲区</div>
-          <div style="font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);margin-top:2px">${blindName} · ${blindVal}次</div>
+          <div style="font-size:var(--font-sm);font-weight:600;color:var(--text-secondary);margin-top:2px">${blindNames}</div>
         </div>
       </div>` +
+      // 周趋势迷你柱状图
+      `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light)">
+        <div style="font-size:var(--font-xs);color:var(--text-muted);text-align:center">📈 近 8 周趋势</div>
+        ${renderMiniBarChart(weeklyTrend)}
+      </div>` +
+      distChangeHTML +
       '<p style="font-size:var(--font-xs);color:var(--text-muted);text-align:center;margin-top:12px">🪞 雷达图帮你看见七个习惯的分布</p>';
   } catch (e) {
     console.error('[renderProgress]', e);
     container.innerHTML = '<p style="font-size:var(--font-sm);color:var(--text-muted);text-align:center;padding:20px 0">加载失败，请重试</p>';
   }
+}
+
+// ── 设置面板 ──
+async function openSettings() {
+  document.getElementById('settingsModal').classList.remove('hidden');
+  // 更新存储信息
+  const backend = Storage.getBackend();
+  document.getElementById('storageInfo').textContent = backend === 'opfs' ? 'OPFS（本地文件系统）' : 'localStorage';
+  try {
+    const records = JSON.parse((await Storage.get('coach_records')) || '[]');
+    document.getElementById('storageCount').textContent = records.length + ' 条';
+  } catch { document.getElementById('storageCount').textContent = '--'; }
+  // 更新反思链开关状态
+  updateReflectionChainToggleUI();
+}
+
+function updateReflectionChainToggleUI() {
+  const enabled = isReflectionChainEnabled();
+  const toggle = document.getElementById('reflectionChainToggle');
+  if (enabled) { toggle.classList.add('on'); } else { toggle.classList.remove('on'); }
+}
+
+// ── 反思链（默认关闭）──
+function isReflectionChainEnabled() {
+  try {
+    const raw = localStorage.getItem('coach_reflection_chain');
+    if (!raw) return false;
+    return JSON.parse(raw).enabled === true;
+  } catch { return false; }
+}
+
+function getReflectionChain() {
+  try {
+    const raw = localStorage.getItem('coach_reflection_chain');
+    return raw ? JSON.parse(raw) : { enabled: false, lastSummary: '', lastHabit: '', lastDate: '' };
+  } catch { return { enabled: false, lastSummary: '', lastHabit: '', lastDate: '' }; }
+}
+
+async function toggleReflectionChain() {
+  const checked = document.getElementById('reflectionChainCheck').checked;
+  const chain = getReflectionChain();
+  chain.enabled = checked;
+  if (!chain.enabled) {
+    // 关闭时清除摘要数据
+    chain.lastSummary = '';
+    chain.lastHabit = '';
+    chain.lastDate = '';
+  }
+  localStorage.setItem('coach_reflection_chain', JSON.stringify(chain));
+  updateReflectionChainToggleUI();
+}
+
+async function saveReflectionChainSummary() {
+  try {
+    const input = document.getElementById('chainSummaryInput');
+    const summary = input ? input.value.trim() : '';
+    if (!summary) return;
+    const chain = getReflectionChain();
+    chain.lastSummary = summary;
+    chain.lastHabit = lastHabit;
+    chain.lastDate = new Date().toISOString();
+    localStorage.setItem('coach_reflection_chain', JSON.stringify(chain));
+    // 隐藏输入区
+    const wrap = document.getElementById('chainWrap');
+    if (wrap) { wrap.innerHTML = '<span style="font-size:var(--font-xs);color:#6a9b5e">✅ 已保存摘要，下次对话教练会自然提及</span>'; }
+  } catch (e) {
+    console.error('[saveReflectionChainSummary]', e);
+  }
+}
+
+function skipReflectionChain() {
+  const wrap = document.getElementById('chainWrap');
+  if (wrap) wrap.style.display = 'none';
+}
+
+// ── 反思链 UI（在 buildCoachHTML 中调用）──
+function buildChainInputHTML() {
+  if (!isReflectionChainEnabled()) return '';
+  return `<div class="chain-input-wrap" id="chainWrap">
+    <span style="font-size:var(--font-xs);color:var(--text-muted)">这次对话的核心洞察是什么？（一句话，可跳过）</span>
+    <div class="chain-input-row">
+      <input type="text" id="chainSummaryInput" placeholder="例如：我发现自己在用"忙"逃避真正重要的决定" maxlength="120">
+      <button class="chain-save" onclick="saveReflectionChainSummary()">保存</button>
+      <button onclick="skipReflectionChain()">跳过</button>
+    </div>
+  </div>`;
 }
 
 init();
